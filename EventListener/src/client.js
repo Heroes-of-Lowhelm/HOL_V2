@@ -10,14 +10,12 @@ const {
 
 const websocket = "wss://dev-ws.zilliqa.com"
 const zilliqa = new Zilliqa('https://dev-api.zilliqa.com');
-
 const chainId = 333; // chainId of the developer testnet
 
 const msgVersion = 1; // current msgVersion
+
 const VERSION = bytes.pack(chainId, msgVersion);
-
-const {get13BatchRandom, get35BatchRandom} = require("./randomizer.js")
-
+const {getSingleRandom, get13BatchRandom, get35BatchRandom} = require("./randomizer");
 
 const privateKey = process.env.OWNER_WALLET_PRIVATEKEY;
 zilliqa.wallet.addByPrivateKey(privateKey);
@@ -38,9 +36,9 @@ async function initializeNetwork() {
     console.log(`Current Minimum Gas Price: ${minGasPrice.result}`);
 
     myGasPrice = units.toQa('2000', units.Units.Li); // Gas Price that will be used by all transactions
-    console.log(`My Gas Price ${myLargeGasPrice.toString()}`);
+    console.log(`My Gas Price ${myGasPrice.toString()}`);
 
-    isGasSufficient = myLargeGasPrice.gte(new BN(minGasPrice.result)); // Checks if your gas price is less than the minimum gas price
+    isGasSufficient = myGasPrice.gte(new BN(minGasPrice.result)); // Checks if your gas price is less than the minimum gas price
     console.log(`Is the gas price sufficient? ${isGasSufficient}`);
 }
 
@@ -115,9 +113,10 @@ async function ListenForEvents() {
     await subscriber.start();
 }
 
-// Generate Single Random && Generate Trait && Upload to IFPS && Store data in trait contract
+// Generate Single Random && Generate Trait && Upload to IFPS
 async function dlHeroesSingleMint(token_id) {
-    
+    let random = await getSingleRandom();
+    // let token_trait = await generateTrait(random);
 }
 
 

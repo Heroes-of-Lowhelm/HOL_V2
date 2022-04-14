@@ -8,6 +8,10 @@ async function getRandom() {
 }
 
 module.exports = {
+    getSingleRandom: async function() {
+        let randomNumber = await getRandom();
+        return randomNumber;
+    },
     get13BatchRandom: async function () {
         let randomNumbers = [];
         // 95 ~ 99 random number
