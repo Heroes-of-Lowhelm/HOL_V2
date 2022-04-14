@@ -612,19 +612,19 @@ transition Mint(to: ByStr20, token_uri: String)
   SetTokenURI token_id token_uri;
 
   e = {
-    _eventname: "Mint";
+    _eventname: "DLHeroesNFTMint";
     to: to;
     token_id: token_id;
     token_uri: token_uri
   };
   event e;
   msg_to_recipient = {
-    _tag: "ZRC6_RecipientAcceptMint";
+    _tag: "DLHeroesNFT_RecipientAcceptMint";
     _recipient: to;
     _amount: Uint128 0
   };
   msg_to_sender = {
-    _tag: "ZRC6_MintCallback";
+    _tag: "DLHeroesNFT_MintCallback";
     _recipient: _sender;
     _amount: Uint128 0;
     to: to;
@@ -647,14 +647,14 @@ transition BatchMint(to_token_uri_pair_list: List (Pair ByStr20 String))
   forall to_token_uri_pair_list HandleMint;
   end_id <- token_id_count;
   e = {
-    _eventname: "BatchMint";
+    _eventname: "DLHeroesNFTBatchMint";
     to_token_uri_pair_list: to_token_uri_pair_list;
     start_id: start_id;
     end_id: end_id
   };
   event e;
   msg_to_sender = {
-    _tag: "ZRC6_BatchMintCallback";
+    _tag: "DLHeroesNFT_BatchMintCallback";
     _recipient: _sender;
     _amount: Uint128 0
   };
