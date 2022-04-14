@@ -45,13 +45,17 @@ async function initializeNetwork() {
 
 
 // Listen for events from a contract - errors aren't caught
-async function ListenForEvents(deployed_contract_base_16) {
-    console.log(deployed_contract_base_16);
+async function ListenForEvents() {
+    let heroesAddr = process.env.HEROES_NFT_ADDRESS;
+    let dlHeroesAddr = process.env.DL_HEROES_NFT_ADDRESS;
+    let gearsAddr = process.env.GEARS_NFT_ADDRESS;
     const subscriber = zilliqa.subscriptionBuilder.buildEventLogSubscriptions(
         websocket,
         {
             addresses: [
-                deployed_contract_base_16
+                heroesAddr,
+                dlHeroesAddr,
+                gearsAddr
             ],
         },
     );
@@ -65,13 +69,42 @@ async function ListenForEvents(deployed_contract_base_16) {
                 console.log("event name==============>", eventObj["_eventname"]);
                 console.log("event param=============>", eventObj["params"]);
 
-                // Listen for GetLatestTWAPHol Event
-                if (eventObj["_eventname"] === "RequestedH13RandomNumber") {
-                    let requestId = eventObj["params"][0]["value"];
-                    let callerAddress = eventObj["params"][1]["value"];
-                    pendingH13Requests.push({callerAddress, id: requestId});
+                // Listen for DLHeroesMint Event
+                if (eventObj["_eventname"] === "DLHeroesNFTMint") {
+                    let token_id = eventObj["params"][1]["value"];
+                    // Do sth here
+                }
+                
+                if (eventObj["_eventname"] === "DLHeroesNFTBatchMint") {
+                    let start_id = eventObj["params"][1]["value"];
+                    let end_id = eventObj["params"][2]["value"];
+                    // Do sth here
                 }
 
+                if (eventObj["_eventname"] === "GearsNFTMint") {
+                    let token_id = eventObj["params"][1]["value"];
+                    // Do sth here
+                }
+
+                if (eventObj["_eventname"] === "GearsNFTBatchMint") {
+                    let start_id = eventObj["params"][1]["value"];
+                    let end_id = eventObj["params"][2]["value"];
+                    // Do sth here
+                }
+
+                
+                
+                if (eventObj["_eventname"] === "HeroesNFTMint") {
+                    let token_id = eventObj["params"][1]["value"];
+                    // Do sth here
+                }
+
+
+                if (eventObj["_eventname"] === "HeroesNFTBatchMint") {
+                    let start_id = eventObj["params"][1]["value"];
+                    let end_id = eventObj["params"][2]["value"];
+                    // Do sth here
+                }
             }
         }
     });
@@ -97,7 +130,7 @@ async function getRandom() {
         console.log("err while initializing====>", e);
     }
     try {
-        await  ListenForEvents(process.env.RNG_ORACLE_ADDRESS);
+        await  ListenForEvents();
     } catch (e) {
         console.log("err while listening events", e)
     }
