@@ -16,6 +16,8 @@ const chainId = 333; // chainId of the developer testnet
 const msgVersion = 1; // current msgVersion
 const VERSION = bytes.pack(chainId, msgVersion);
 
+const {get13BatchRandom, get35BatchRandom} = require("./randomizer.js")
+
 
 const privateKey = process.env.OWNER_WALLET_PRIVATEKEY;
 zilliqa.wallet.addByPrivateKey(privateKey);
@@ -72,12 +74,14 @@ async function ListenForEvents() {
                 // Listen for DLHeroesMint Event
                 if (eventObj["_eventname"] === "DLHeroesNFTMint") {
                     let token_id = eventObj["params"][1]["value"];
+                    await dlHeroesSingleMint(token_id);
                     // Do sth here
                 }
                 
                 if (eventObj["_eventname"] === "DLHeroesNFTBatchMint") {
                     let start_id = eventObj["params"][1]["value"];
                     let end_id = eventObj["params"][2]["value"];
+                    await dlHeroesBatchMint(start_id, end_id);
                     // Do sth here
                 }
 
@@ -111,17 +115,11 @@ async function ListenForEvents() {
     await subscriber.start();
 }
 
-
-
-async function getRandom() {
-    // return uint256 random number
-    let returnRand = '';
-    for (let i = 0; i < 5 ; i++) {
-        returnRand += (Math.floor(Math.random() * (2**32 - 1))).toString();
-    }
-    console.log(returnRand);
-    return returnRand
+// Generate Single Random && Generate Trait && Upload to IFPS && Store data in trait contract
+async function dlHeroesSingleMint(token_id) {
+    
 }
+
 
 (async () => {
     try {
