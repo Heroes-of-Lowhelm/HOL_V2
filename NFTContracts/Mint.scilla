@@ -1,0 +1,348 @@
+(* SPDX-License-Identifier: MIT *)
+scilla_version 0
+
+(***************************************************)
+(*               Associated library                *)
+(***************************************************)
+import IntUtils ListUtils 
+
+library MintingPool
+let one = Uint256 1
+let zero = Uint128 0
+let true = True
+let false = False
+let empty_string = ""
+let one_msg = 
+    fun (msg : Message) => 
+        let nil_msg = Nil {Message} in
+        Cons {Message} msg nil_msg   
+
+(* Dummy user-defined ADT *)
+type Error =
+| CodeIsOwner
+| CodeIsSameBlock
+| CodeIsHeroesNotSet
+| CodeIsDlHeroesNotSet
+| CodeIsGearsNotSet
+
+let make_error =
+    fun (result : Error) =>
+        let result_code = 
+        match result with
+        | CodeIsOwner                => Int32 -1
+        | CodeIsSameBlock            => Int32 -2
+        | CodeIsHeroesNotSet         => Int32 -3 
+        | CodeIsDlHeroesNotSet       => Int32 -4
+        | CodeIsGearsNotSet          => Int32 -5
+        end
+        in
+        { _exception : "Error"; code : result_code }
+
+
+(***************************************************)
+(*             The contract definition             *)
+(***************************************************)
+contract MintingPool 
+(
+    contract_owner: ByStr20
+)
+
+(* Mutable fields *)
+field oracleAddress: Option ByStr20 = None {ByStr20}
+field heroesNFTAddress: Option ByStr20 = None {ByStr20}
+field dlHeroesNFTAddress: Option ByStr20 = None {ByStr20}
+field gearsNFTAddress: Option ByStr20 = None {ByStr20}
+
+(* Mapping for caller Address to BlockNumber *)
+field caller_block_num: Map ByStr20 BNum = Emp ByStr20 BNum
+
+(* The total number of heroes minted *)
+field heroes_id_count: Uint256 = Uint256 0
+
+(* The total number of dl_heroes minted *)
+field dl_heroes_id_count: Uint256 = Uint256 0
+
+(* The total number of gears minted *)
+field gears_id_count: Uint256 = Uint256 0
+
+(**************************************)
+(*             Procedures             *)
+(**************************************)
+
+procedure ThrowError(error: Error)
+    e = make_error error;
+    throw e
+end
+
+
+procedure IsSameBlock(blk: BNum)
+    last_blk <- caller_block_num[_sender];
+    match last_blk with
+    | Some v =>
+        is_allowed = builtin blt v blk;
+        match is_allowed with
+        | False =>
+            err = CodeIsSameBlock;
+            ThrowError err
+        | True =>
+        end
+    | None =>
+    end
+end
+
+
+procedure IsNotOwner(address: ByStr20)
+    is_owner = builtin eq contract_owner address;
+    match is_owner with
+    | False =>
+        err = CodeIsOwner;
+        ThrowError err
+    | True =>
+    end
+end
+
+(***************************************)
+(*             Transitions             *)
+(***************************************)
+
+(* @dev: Set Heroes NFT Contract address. Only contract owner allowed to invoke.   *)
+(* param heroes_nft_address:      Address of the Heroes NFT address.                  *)
+transition setHeroesNFTAddress(heroes_nft_address : ByStr20)
+    IsNotOwner _sender;
+    heroesNFTAddressTmp = Some {ByStr20} heroes_nft_address ;
+    heroesNFTAddress := heroesNFTAddressTmp
+end
+
+(* @dev: Set Dark/Light Heroes NFT Contract address. Only contract owner allowed to invoke.   *)
+(* param dl_heroes_nft_address:      Address of the Dark/Light Heroes NFT address.                  *)
+transition setDLHeroesNFTAddress(dl_heroes_nft_address : ByStr20)
+    IsNotOwner _sender;
+    heroesNFTAddressTmp = Some {ByStr20} dl_heroes_nft_address;
+    dlHeroesNFTAddress := heroesNFTAddressTmp
+end
+
+
+(* @dev: Set Gear NFT Contract address. Only contract owner allowed to invoke.   *)
+(* param gear_nft_address:      Address of the Gears NFT address.                *)
+transition setGearNFTAddress(gear_nft_address : ByStr20)
+    IsNotOwner _sender;
+    gearsNFTAddressTmp = Some {ByStr20} gear_nft_address;
+    gearsNFTAddress := gearsNFTAddressTmp
+end
+
+
+(* @dev: Transition for users to Mint 1*-3* Heroes.This transition invokes requestRandomNumber() transition in the oracle contract   *)
+transition Mint13Heroes()
+    blk <- & BLOCKNUMBER;
+    IsSameBlock blk;
+
+    heroesNFTAddressTmp <- heroesNFTAddress;
+    match heroesNFTAddressTmp with
+    | Some v =>
+        (* generate ID *)
+        current_heroes_id_count <- heroes_id_count;
+        new_heroes_id_count = builtin add current_heroes_id_count one;
+        heroes_id_count := new_heroes_id_count;
+        token_id = new_heroes_id_count;
+
+        e = {
+            _eventname : "Mint13Heroes";
+            token_id: token_id
+        };
+        event e;
+
+        (* Call Mint function *)
+        msg = {
+            _tag: "Mint";
+            _recipient: v;
+            _amount: Uint128 0;
+            to: _sender;
+            token_uri: ""
+        };
+        msgs = one_msg msg;
+        send msgs
+    | None =>
+        err = CodeIsHeroesNotSet;
+        ThrowError err
+    end
+end
+
+(* @dev: Transition for users to Mint 1*-3* Gears.This transition invokes requestG13RandomNumber() transition in the oracle contract   *)
+transition Mint13Gears()
+    blk <- & BLOCKNUMBER;
+    IsSameBlock blk;
+
+    gearsNFTAddressTmp <- gearsNFTAddress;
+    match gearsNFTAddressTmp with
+    | Some v =>
+        (* generate ID *)
+        current_gears_id_count <- gears_id_count;
+        new_gears_id_count = builtin add current_gears_id_count one;
+        gears_id_count := new_gears_id_count;
+        token_id = new_gears_id_count;
+
+        e = {
+            _eventname : "Mint13Gears";
+            token_id: token_id
+        };
+        event e;
+
+        (* Call Mint function *)
+        msg = {
+            _tag: "Mint";
+            _recipient: v;
+            _amount: Uint128 0;
+            to: _sender;
+            token_uri: ""
+        };
+        msgs = one_msg msg;
+        send msgs
+    | None =>
+        err = CodeIsGearsNotSet;
+        ThrowError err
+    end
+end
+
+(* @dev: Transition for users to Mint 3*-5* Heroes.This transition invokes requestRandomNumber() transition in the oracle contract   *)
+transition Mint35Heroes()
+    blk <- & BLOCKNUMBER;
+    IsSameBlock blk;
+
+    heroesNFTAddressTmp <- heroesNFTAddress;
+    match heroesNFTAddressTmp with
+    | Some v =>
+        (* generate ID *)
+        current_heroes_id_count <- heroes_id_count;
+        new_heroes_id_count = builtin add current_heroes_id_count one;
+        heroes_id_count := new_heroes_id_count;
+        token_id = new_heroes_id_count;
+
+        e = {
+            _eventname : "Mint35Heroes";
+            token_id: token_id
+        };
+        event e;
+
+        (* Call Mint function *)
+        msg = {
+            _tag: "Mint";
+            _recipient: v;
+            _amount: Uint128 0;
+            to: _sender;
+            token_uri: ""
+        };
+        msgs = one_msg msg;
+        send msgs
+    | None =>
+        err = CodeIsHeroesNotSet;
+        ThrowError err
+    end
+end
+
+(* @dev: Transition for users to Mint 3*-5* Heroes.This transition invokes requestRandomNumber() transition in the oracle contract   *)
+transition Mint35Gears()
+    blk <- & BLOCKNUMBER;
+    IsSameBlock blk;
+
+    gearsNFTAddressTmp <- gearsNFTAddress;
+    match gearsNFTAddressTmp with
+    | Some v =>
+        (* generate ID *)
+        current_gears_id_count <- gears_id_count;
+        new_gears_id_count = builtin add current_gears_id_count one;
+        gears_id_count := new_gears_id_count;
+        token_id = new_gears_id_count;
+
+        e = {
+            _eventname : "Mint35Gears";
+            token_id: token_id
+        };
+        event e;
+
+        (* Call Mint function *)
+        msg = {
+            _tag: "Mint";
+            _recipient: v;
+            _amount: Uint128 0;
+            to: _sender;
+            token_uri: ""
+        };
+        msgs = one_msg msg;
+        send msgs
+    | None =>
+        err = CodeIsGearsNotSet;
+        ThrowError err
+    end
+end
+
+(* @dev: Transition for users to Mint Dark/Light Heroes.This transition invokes requestRandomNumber() transition in the oracle contract   *)
+transition MintDLHeroes()
+    blk <- & BLOCKNUMBER;
+    IsSameBlock blk;
+
+    dlHeroesNFTAddressTmp <- dlHeroesNFTAddress;
+    match dlHeroesNFTAddressTmp with
+    | Some v =>
+        (* generate ID *)
+        current_dl_heroes_id_count <- dl_heroes_id_count;
+        new_dl_heroes_id_count = builtin add current_dl_heroes_id_count one;
+        dl_heroes_id_count := new_dl_heroes_id_count;
+        token_id = new_dl_heroes_id_count;
+
+        e = {
+            _eventname : "MintDLHeroes";
+            token_id: token_id
+        };
+        event e;
+
+        (* Call Mint function *)
+        msg = {
+            _tag: "Mint";
+            _recipient: v;
+            _amount: Uint128 0;
+            to: _sender;
+            token_uri: ""
+        };
+        msgs = one_msg msg;
+        send msgs
+    | None =>
+        err = CodeIsDlHeroesNotSet;
+        ThrowError err
+    end
+end
+
+
+(* @dev: Transition for users to Batch Mint 1*-3* Heroes.This transition invokes requestBatchRandomNumber() transition in the oracle contract   *)
+transition BatchMint13Heroes()
+    blk <- & BLOCKNUMBER;
+    IsSameBlock blk;
+end
+
+(* @dev: Transition for users to Batch Mint 1*-3* Heroes.This transition invokes requestBatchRandomNumber() transition in the oracle contract   *)
+transition BatchMint13Gears()
+    blk <- & BLOCKNUMBER;
+    IsSameBlock blk;
+end
+
+(* @dev: Transition for users to Batch Mint 3*-5* Heroes.This transition invokes requestBatchRandomNumber() transition in the oracle contract   *)
+transition BatchMint35Heroes()
+    blk <- & BLOCKNUMBER;
+    IsSameBlock blk;
+end
+
+(* @dev: Transition for users to Batch Mint 3*-5* Gears.This transition invokes requestBatchRandomNumber() transition in the oracle contract   *)
+transition BatchMint35Gears()
+    blk <- & BLOCKNUMBER;
+    IsSameBlock blk;
+end
+
+
+transition ZRC6_MintCallback(to: ByStr20, token_id: Uint256, token_uri: String)
+    e = {_eventname: "ZRC6_MintCallback"; to: to; token_id: token_id; token_uri: token_uri};
+    event e
+end
+
+transition ZRC6_BatchMintCallback()
+    e = {_eventname: "ZRC6_BatchMintCallback"};
+    event e
+end
