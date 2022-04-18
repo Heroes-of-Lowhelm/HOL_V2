@@ -16,6 +16,7 @@ const msgVersion = 1; // current msgVersion
 
 const VERSION = bytes.pack(chainId, msgVersion);
 const {getSingleRandom, get13BatchRandom, get35BatchRandom} = require("./randomizer");
+const {generateDLHeroesTrait} = require("./traits");
 
 const privateKey = process.env.OWNER_WALLET_PRIVATEKEY;
 zilliqa.wallet.addByPrivateKey(privateKey);
@@ -116,7 +117,7 @@ async function ListenForEvents() {
 // Generate Single Random && Generate Trait && Upload to IFPS
 async function dlHeroesSingleMint(token_id) {
     let random = await getSingleRandom();
-    // let token_trait = await generateTrait(random);
+    let [name, rarity] = await generateDLHeroesTrait(random);
 }
 
 
