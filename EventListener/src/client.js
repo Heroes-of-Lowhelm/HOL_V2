@@ -76,13 +76,7 @@ async function ListenForEvents() {
                     await dlHeroesSingleMint(token_id);
                     // Do sth here
                 }
-                
-                if (eventObj["_eventname"] === "DLHeroesNFTBatchMint") {
-                    let start_id = eventObj["params"][1]["value"];
-                    let end_id = eventObj["params"][2]["value"];
-                    await dlHeroesBatchMint(start_id, end_id);
-                    // Do sth here
-                }
+
 
                 if (eventObj["_eventname"] === "GearsNFTMint") {
                     let token_id = eventObj["params"][1]["value"];
