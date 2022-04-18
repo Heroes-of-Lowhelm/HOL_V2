@@ -16,7 +16,7 @@ const msgVersion = 1; // current msgVersion
 
 const VERSION = bytes.pack(chainId, msgVersion);
 const {getSingleRandom, get13BatchRandom, get35BatchRandom} = require("./randomizer");
-const {generateDLHeroesTrait} = require("./traits");
+const {generateDLHeroesTrait, generateHeroesTrait, generateGearsTrait} = require("./traits");
 
 const privateKey = process.env.OWNER_WALLET_PRIVATEKEY;
 zilliqa.wallet.addByPrivateKey(privateKey);
@@ -47,16 +47,12 @@ async function initializeNetwork() {
 
 // Listen for events from a contract - errors aren't caught
 async function ListenForEvents() {
-    let heroesAddr = process.env.HEROES_NFT_ADDRESS;
-    let dlHeroesAddr = process.env.DL_HEROES_NFT_ADDRESS;
-    let gearsAddr = process.env.GEARS_NFT_ADDRESS;
+    let mintContractAddress = process.env.MINT_CONTRACT_ADDRESS;
     const subscriber = zilliqa.subscriptionBuilder.buildEventLogSubscriptions(
         websocket,
         {
             addresses: [
-                heroesAddr,
-                dlHeroesAddr,
-                gearsAddr
+                mintContractAddress
             ],
         },
     );
@@ -70,37 +66,25 @@ async function ListenForEvents() {
                 console.log("event name==============>", eventObj["_eventname"]);
                 console.log("event param=============>", eventObj["params"]);
 
-                // Listen for DLHeroesMint Event
-                if (eventObj["_eventname"] === "DLHeroesNFTMint") {
-                    let token_id = eventObj["params"][1]["value"];
+                if (eventObj["_eventname"] === "Mint13Heroes") {
+                    let token_id = eventObj["params"][0]["value"];
+                    await heroesSingleMint(token_id, false);
+                }
+                if (eventObj["_eventname"] === "Mint35Heroes") {
+                    let token_id = eventObj["params"][0]["value"];
+                    await heroesSingleMint(token_id, true);
+                }
+                if (eventObj["_eventname"] === "MintDLHeroes") {
+                    let token_id = eventObj["params"][0]["value"];
                     await dlHeroesSingleMint(token_id);
-                    // Do sth here
                 }
-
-
-                if (eventObj["_eventname"] === "GearsNFTMint") {
-                    let token_id = eventObj["params"][1]["value"];
-                    // Do sth here
+                if (eventObj["_eventname"] === "Mint13Gears") {
+                    let token_id = eventObj["params"][0]["value"];
+                    await gearsSingleMint(token_id, false);
                 }
-
-                if (eventObj["_eventname"] === "GearsNFTBatchMint") {
-                    let start_id = eventObj["params"][1]["value"];
-                    let end_id = eventObj["params"][2]["value"];
-                    // Do sth here
-                }
-
-                
-                
-                if (eventObj["_eventname"] === "HeroesNFTMint") {
-                    let token_id = eventObj["params"][1]["value"];
-                    // Do sth here
-                }
-
-
-                if (eventObj["_eventname"] === "HeroesNFTBatchMint") {
-                    let start_id = eventObj["params"][1]["value"];
-                    let end_id = eventObj["params"][2]["value"];
-                    // Do sth here
+                if (eventObj["_eventname"] === "Mint35Gears") {
+                    let token_id = eventObj["params"][0]["value"];
+                    await gearsSingleMint(token_id, true);
                 }
             }
         }
@@ -113,7 +97,14 @@ async function dlHeroesSingleMint(token_id) {
     let random = await getSingleRandom();
     let [name, rarity] = await generateDLHeroesTrait(random);
 }
-
+async function heroesSingleMint(token_id, is_high_level) {
+    let random = await getSingleRandom();
+    let [name, rarity] = await generateHeroesTrait(random, is_high_level);
+}
+async function gearsSingleMint(token_id, is_high_level) {
+    let random = await getSingleRandom();
+    let [name, rarity] = await generateGearsTrait(random, is_high_level);
+}
 
 (async () => {
     try {
