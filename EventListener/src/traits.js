@@ -1,3 +1,270 @@
+function getMainStat(number, gearType) {
+    if (gearType === "weapon") {
+        return "ATTACK";
+    } else if (gearType === "helmet") {
+        return "HP";
+    } else if (gearType === "armor") {
+        return "DEF";
+    } else if (gearType === "shoes") {
+        let possibilities = ["SPD", "ATK", "ATK%", "HP", "HP%", "DEF", "DEF%"];
+        let rem = number % 7;
+        return possibilities[rem];
+    } else if (gearType === "neclace") {
+        let possibilities = ["CRIT.RATE%", "CRIT.DMG%", "ATK%", "ATK", "HP", "HP%", "DEF", "DEF%"];
+        let rem = number % 8;
+        return possibilities[rem];
+    } else if (gearType === "ring") {
+        let possibilities = ["ACC", "RES", "ATK", "ATK%", "HP%", "HP", "DEF", "DEF%"];
+        let rem = number % 8;
+        return  possibilities[rem];
+    } else {
+        console.log("The gear type is not correct");
+        return "";
+    }
+}
+function getSubStatType(number, gearType) {
+    if (gearType === "weapon") {
+        let possibilities = ["ATK%", "HP", "HP%", "SPD", "CRIT.RATE%", "CRIT.DMG%", "ACC", "RES"];
+        let rem = number % 8;
+        let sub_stat_type = possibilities[rem];
+        return sub_stat_type;
+    } else if (gearType === "helmet" || gearType === "shoes" || gearType === "neclace" || gearType === "ring") {
+        let possibilities = ["ATK%", "ATK", "HP", "HP%", "DEF", "DEF%", "SPD", "CRIT.RATE%", "CRIT.DMG%", "ACC", "RES"]
+        let rem = number % 11;
+        let sub_stat_type = possibilities[rem];
+        return sub_stat_type;
+    } else if (gearType === "armor") {
+        let possibilities = ["HP", "HP%", "DEF%", "SPD", "CRIT.RATE%", "CRIT.DMG%", "ACC", "RES"];
+        let rem = number % 8;
+        let sub_stat_type = possibilities[rem];
+        return sub_stat_type;
+    } else {
+        console.log("gear type is not correct");
+        return "";
+    }
+}
+
+function getSubStatNum(number, gearType, level) {
+    if (level === 1 || level === 2) {
+        let sub_stat_num = 0;
+        if (gearType === "ATK") {
+            sub_stat_num = 10 + number % 91;
+        } else if (gearType === "ATK%") {
+            sub_stat_num = 1 + number % 4;
+        } else  if (gearType === "DEF") {
+            sub_stat_num = 10 + number % 91;
+        } else if (gearType === "DEF%") {
+            sub_stat_num = 1 + number % 4;
+        } else if (gearType === "HP") {
+            sub_stat_num = 20 + number % 131;
+        } else if (gearType === "HP%") {
+            sub_stat_num = 1 + number % 4;
+        } else if (gearType === "SPD") {
+            sub_stat_num = 1 + number % 3;
+        } else if (gearType === "CRIT.DMG%") {
+            sub_stat_num = 3 + number % 3;
+        } else if (gearType === "CRIT.RATE%") {
+            sub_stat_num = 2 + number % 3;
+        } else if (gearType === "ACC%") {
+            sub_stat_num = 1 + number % 4;
+        } else {
+            sub_stat_num = 1 + number % 4;
+        }
+        return sub_stat_num;
+    } else if (level === 3) {
+        let sub_stat_num = 0;
+        if (gearType === "ATK") {
+            sub_stat_num = 15 + number % 86;
+        } else if (gearType === "ATK%") {
+            sub_stat_num = 2 + number % 5;
+        } else  if (gearType === "DEF") {
+            sub_stat_num = 15 + number % 86;
+        } else if (gearType === "DEF%") {
+            sub_stat_num = 2 + number % 5;
+        } else if (gearType === "HP") {
+            sub_stat_num = 30 + number % 121;
+        } else if (gearType === "HP%") {
+            sub_stat_num = 2 + number % 5;
+        } else if (gearType === "SPD") {
+            sub_stat_num = 1 + number % 4;
+        } else if (gearType === "CRIT.DMG%") {
+            sub_stat_num = 3 + number % 4;
+        } else if (gearType === "CRIT.RATE%") {
+            sub_stat_num = 2 + number % 4;
+        } else if (gearType === "ACC%") {
+            sub_stat_num = 2 + number % 5;
+        } else {
+            sub_stat_num = 2 + number % 5;
+        }
+        return sub_stat_num;
+    } else if (level === 4) {
+        let sub_stat_num = 0;
+        if (gearType === "ATK") {
+            sub_stat_num = 20 + number % 131;
+        } else if (gearType === "ATK%") {
+            sub_stat_num = 3 + number % 6;
+        } else  if (gearType === "DEF") {
+            sub_stat_num = 20 + number % 131;
+        } else if (gearType === "DEF%") {
+            sub_stat_num = 3 + number % 6;
+        } else if (gearType === "HP") {
+            sub_stat_num = 30 + number % 161;
+        } else if (gearType === "HP%") {
+            sub_stat_num = 3 + number % 6;
+        } else if (gearType === "SPD") {
+            sub_stat_num = 1 + number % 5;
+        } else if (gearType === "CRIT.DMG%") {
+            sub_stat_num = 3 + number % 5;
+        } else if (gearType === "CRIT.RATE%") {
+            sub_stat_num = 3 + number % 4;
+        } else if (gearType === "ACC%") {
+            sub_stat_num = 3 + number % 6;
+        } else {
+            sub_stat_num = 3 + number % 6;
+        }
+        return sub_stat_num;
+    } else {
+        let sub_stat_num = 0;
+        if (gearType === "ATK") {
+            sub_stat_num = 30 + number % 171;
+        } else if (gearType === "ATK%") {
+            sub_stat_num = 4 + number % 7;
+        } else  if (gearType === "DEF") {
+            sub_stat_num = 30 + number % 171;
+        } else if (gearType === "DEF%") {
+            sub_stat_num = 4 + number % 7;
+        } else if (gearType === "HP") {
+            sub_stat_num = 50 + number % 201;
+        } else if (gearType === "HP%") {
+            sub_stat_num = 4 + number % 7;
+        } else if (gearType === "SPD") {
+            sub_stat_num = 2 + number % 5;
+        } else if (gearType === "CRIT.DMG%") {
+            sub_stat_num = 4 + number % 5;
+        } else if (gearType === "CRIT.RATE%") {
+            sub_stat_num = 3 + number % 5;
+        } else if (gearType === "ACC%") {
+            sub_stat_num = 4 + number % 7;
+        } else {
+            sub_stat_num = 4 + number % 7;
+        }
+        return sub_stat_num;
+    }
+}
+
+function getSubStatLv1(number, gearType) {
+    if (number % 100 === 0) {
+        let sub_stat_type = getSubStatType(number, gearType);
+        let sub_stat_num = getSubStatNum(number, sub_stat_type, 1)
+        return [{type: sub_stat_type, value: sub_stat_num}];
+    } else {
+        return []
+    }
+}
+
+function getSubStatLv2(number, gearType) {
+    let sub_stat_type = getSubStatType(number, gearType);
+    let sub_stat_num = getSubStatNum(number, sub_stat_type, 2);
+    let substats = [{type: sub_stat_type, value: sub_stat_num}];
+    if (number % 100 === 0) {
+        number = number / 100;
+        sub_stat_type = getSubStatType(number, gearType);
+        sub_stat_num = getSubStatNum(number, sub_stat_type, 2);
+        substats.push({type: sub_stat_type, value: sub_stat_num});
+    }
+    return substats;
+}
+
+function getSubStatLv3(number, gearType) {
+    let substats = [];
+    if (number % 100 === 0) {
+        for (let i = 0; i < 3; i ++) {
+            let sub_stat_type = getSubStatType(number, gearType);
+            let sub_stat_num = getSubStatNum(number, sub_stat_type, 3);
+            substats.push({type: sub_stat_type, value: sub_stat_num});
+            number = number / 100;
+        }
+    } else {
+        for (let i = 0; i < 2; i ++) {
+            let sub_stat_type = getSubStatType(number, gearType);
+            let sub_stat_num = getSubStatNum(number, sub_stat_type, 3);
+            substats.push({type: sub_stat_type, value: sub_stat_num});
+            number = number / 100;
+        }
+    }
+    return substats;
+}
+
+function getSubStatLv4(number, gearType) {
+    let substats = [];
+    if (number % 100 === 0) {
+        for (let i = 0; i < 4; i ++) {
+            let sub_stat_type = getSubStatType(number, gearType);
+            let sub_stat_num = getSubStatNum(number, sub_stat_type, 4);
+            substats.push({type: sub_stat_type, value: sub_stat_num});
+            number = number / 100;
+        }
+    } else {
+        for (let i = 0; i < 3; i ++) {
+            let sub_stat_type = getSubStatType(number, gearType);
+            let sub_stat_num = getSubStatNum(number, sub_stat_type, 4);
+            substats.push({type: sub_stat_type, value: sub_stat_num});
+            number = number / 100;
+        }
+    }
+    return substats;
+}
+
+function getSubStatLv5(number, gearType) {
+    let substats = [];
+    if (number % 100 === 0) {
+        for (let i = 0; i < 5; i ++) {
+            let sub_stat_type = getSubStatType(number, gearType);
+            let sub_stat_num = getSubStatNum(number, sub_stat_type, 5);
+            substats.push({type: sub_stat_type, value: sub_stat_num});
+            number = number / 100;
+        }
+    } else {
+        for (let i = 0; i < 4; i ++) {
+            let sub_stat_type = getSubStatType(number, gearType);
+            let sub_stat_num = getSubStatNum(number, sub_stat_type, 5);
+            substats.push({type: sub_stat_type, value: sub_stat_num});
+            number = number / 100;
+        }
+    }
+    let rem = number & 7;
+    if (rem === 0) {
+        substats.push({type: "Set", value: "Life"});
+    } else if (rem === 1) {
+        substats.push({type: "Set", value: "Harden"});
+    } else if (rem === 2) {
+        substats.push({type: "Set", value: "Strength"});
+    } else if (rem === 3) {
+        substats.push({type: "Set", value: "Degenerate"});
+    } else if (rem === 4) {
+        substats.push({type: "Set", value: "Effectiveness"});
+    } else if (rem === 5) {
+        substats.push({type: "Set", value: "Explosion"});
+    } else {
+        substats.push({type: "Set", value: "Vampire"});
+    }
+    return substats;
+}
+
+function getSubStats(number, gearType, rarity) {
+    if (rarity === 1) {
+        return getSubStatLv1(number, gearType);
+    } else if (rarity === 2) {
+        return getSubStatLv2(number, gearType);
+    } else if (rarity === 3) {
+        return  getSubStatLv3(number, gearType);
+    } else if (rarity === 4) {
+        return  getSubStatLv4(number, gearType);
+    } else {
+        return getSubStatLv5(number, gearType);
+    }
+}
+
 module.exports = {
     generateDLHeroesTrait: async function (random_number) {
         let rem = random_number % 100;
@@ -125,246 +392,378 @@ module.exports = {
         if (is_high_level) {
             if (rem < 80) {
                 rarity = 3;
+                let gearType = "weapon";
                 let rem_sub = random_number % 18;
                 if (rem_sub === 0) {
-                    name = "Steel Sword"
+                    name = "Steel Sword";
+                    gearType =  "weapon";
                 } else if (rem_sub === 1) {
-                    name = "Steel Helmet"
+                    name = "Steel Helmet";
+                    gearType =  "helmet";
                 } else if (rem_sub === 2) {
-                    name = "Steel Armor"
+                    name = "Steel Armor";
+                    gearType =  "armor";
                 } else if (rem_sub === 3) {
-                    name = "Steel Shoes"
+                    name = "Steel Shoes";
+                    gearType =  "shoes";
                 } else if (rem_sub === 4) {
-                    name = "Intermediate Archer Bow"
+                    name = "Intermediate Archer Bow";
+                    gearType =  "weapon";
                 } else if (rem_sub === 5) {
-                    name = "Light Huntsman Helmet"
+                    name = "Light Huntsman Helmet";
+                    gearType =  "helmet";
                 } else if (rem_sub === 6) {
-                    name = "Light Huntsman Armor"
+                    name = "Light Huntsman Armor";
+                    gearType =  "armor";
                 } else if (rem_sub === 7) {
-                    name = "Light Huntsman Boots"
+                    name = "Light Huntsman Boots";
+                    gearType = "shoes"
                 } else if (rem_sub === 8) {
-                    name = "Enchanted Wand"
+                    name = "Enchanted Wand";
+                    gearType = "weapon";
                 } else if (rem_sub === 9) {
-                    name = "Enchanted Silk Cap"
+                    name = "Enchanted Silk Cap";
+                    gearType = "helmet";
                 } else if (rem_sub === 10) {
-                    name = "Enchanted Silk Robe"
+                    name = "Enchanted Silk Robe";
+                    gearType = "armor";
                 } else if (rem_sub === 11) {
-                    name = "Enchanted Silk Shoes"
+                    name = "Enchanted Silk Shoes";
+                    gearType = "shoes";
                 } else if (rem_sub === 12) {
-                    name = "Steel Kusarigama"
+                    name = "Steel Kusarigama";
+                    gearType = "weapon"
                 } else if (rem_sub === 13) {
-                    name = "Black Soft Beanie"
+                    name = "Black Soft Beanie";
+                    gearType = "helmet";
                 } else if (rem_sub === 14) {
-                    name = "Black Soft Hoodie"
+                    name = "Black Soft Hoodie";
+                    gearType = "armor";
                 } else if (rem_sub === 15) {
-                    name = "Black Soft Shoes"
+                    name = "Black Soft Shoes";
+                    gearType = "shoes";
                 } else if (rem_sub === 16) {
-                    name = "Silver Ring"
+                    name = "Silver Ring";
+                    gearType = "ring";
                 } else {
-                    name = "Silver Necklace"
+                    name = "Silver Necklace";
+                    gearType = "neclace";
                 }
+                let main_stat = getMainStat(random_number/100, gearType);
+                let substats = getSubStats(random_number/10000, gearType, rarity);
+                return [name, rarity, main_stat, substats];
             } else if (rem < 98) {
                 rarity = 4;
+                let gearType = "weapon";
                 let rem_sub = random_number % 18;
                 if (rem_sub === 0) {
-                    name = "Crimson Sword"
+                    name = "Crimson Sword";
+                    gearType = "weapon";
                 } else if (rem_sub === 1) {
-                    name = "Golden Helmet"
+                    name = "Golden Helmet";
+                    gearType = "helmet"
                 } else if (rem_sub === 2) {
-                    name = "Golden Armor"
+                    name = "Golden Armor";
+                    gearType = "armor"
                 } else if (rem_sub === 3) {
-                    name = "Golden Shoes"
+                    name = "Golden Shoes";
+                    gearType = "shoes"
                 } else if (rem_sub === 4) {
-                    name = "Crimson Crossbow"
+                    name = "Crimson Crossbow";
+                    gearType = "weapon";
                 } else if (rem_sub === 5) {
-                    name = "Hardened Leather Helmet"
+                    name = "Hardened Leather Helmet";
+                    gearType = "helmet"
                 } else if (rem_sub === 6) {
-                    name = "Hardened Leather Armor"
+                    name = "Hardened Leather Armor";
+                    gearType = "armor";
                 } else if (rem_sub === 7) {
-                    name = "Hardened Leather Shoes"
+                    name = "Hardened Leather Shoes";
+                    gearType = "armor";
                 } else if (rem_sub === 8) {
-                    name = "Crimson Staff"
+                    name = "Crimson Staff";
+                    gearType = "weapon";
                 } else if (rem_sub === 9) {
-                    name = "Hardened Silk Cap"
+                    name = "Hardened Silk Cap";
+                    gearType = "helmet";
                 } else if (rem_sub === 10) {
-                    name = "Hardened Silk Robe"
+                    name = "Hardened Silk Robe";
+                    gearType = "armor";
                 } else if (rem_sub === 11) {
-                    name = "Hardened Silk Shoes"
+                    name = "Hardened Silk Shoes";
+                    gearType = "shoes";
                 } else if (rem_sub === 12) {
-                    name = "Dual Kusarigama"
+                    name = "Dual Kusarigama";
+                    gearType = "weapon";
                 } else if (rem_sub === 13) {
-                    name = "Enchanted Headband"
+                    name = "Enchanted Headband";
+                    gearType = "helmet";
                 } else if (rem_sub === 14) {
-                    name = "Enchanted Light Sweater"
+                    name = "Enchanted Light Sweater";
+                    gearType = "armor";
                 } else if (rem_sub === 15) {
-                    name = "Enchanted Light Sneakers"
+                    name = "Enchanted Light Sneakers";
+                    gearType = "shoes";
                 } else if (rem_sub === 16) {
-                    name = "Gold Ring"
+                    name = "Gold Ring";
+                    gearType = "ring";
                 } else {
-                    name = "Gold Necklace"
+                    name = "Gold Necklace";
+                    gearType = "neclace";
                 }
+                let main_stat = getMainStat(random_number/100, gearType);
+                let substats = getSubStats(random_number/10000, gearType, rarity);
+                return [name, rarity, main_stat, substats];
             } else {
                 rarity = 5;
+                let gearType = "weapon";
                 let rem_sub = random_number % 18;
                 if (rem_sub === 0) {
-                    name = "Infinite Sword"
+                    name = "Infinite Sword";
+                    gearType = "weapon";
                 } else if (rem_sub === 1) {
-                    name = "King Helmet"
+                    name = "King Helmet";
+                    gearType = "helmet";
                 } else if (rem_sub === 2) {
-                    name = "King Armor"
+                    name = "King Armor";
+                    gearType = "armor";
                 } else if (rem_sub === 3) {
-                    name = "King Shoes"
+                    name = "King Shoes";
+                    gearType = "shoes";
                 } else if (rem_sub === 4) {
-                    name = "Mythical Bow"
+                    name = "Mythical Bow";
+                    gearType = "weapon";
                 } else if (rem_sub === 5) {
-                    name = "King Hunting Hat"
+                    name = "King Hunting Hat";
+                    gearType = "helmet";
                 } else if (rem_sub === 6) {
-                    name = "King Hunting Suit"
+                    name = "King Hunting Suit";
+                    gearType = "armor";
                 } else if (rem_sub === 7) {
-                    name = "King Hunting Shoes"
+                    name = "King Hunting Shoes";
+                    gearType = "shoes";
                 } else if (rem_sub === 8) {
-                    name = "Superior Staff"
+                    name = "Superior Staff";
+                    gearType = "weapon";
                 } else if (rem_sub === 9) {
-                    name = "King Wizard Hat"
+                    name = "King Wizard Hat";
+                    gearType = "helmet";
                 } else if (rem_sub === 10) {
-                    name = "King Robe"
+                    name = "King Robe";
+                    gearType = "armor";
                 } else if (rem_sub === 11) {
-                    name = "King Silk Shoes"
+                    name = "King Silk Shoes";
+                    gearType = "shoes";
                 } else if (rem_sub === 12) {
-                    name = "Dagger of Fatality"
+                    name = "Dagger of Fatality";
+                    gearType = "weapon";
                 } else if (rem_sub === 13) {
-                    name = "King Headband"
+                    name = "King Headband";
+                    gearType = "helmet";
                 } else if (rem_sub === 14) {
-                    name = "King Ninja Suit"
+                    name = "King Ninja Suit";
+                    gearType = "armor";
                 } else if (rem_sub === 15) {
-                    name = "King Ninja Shoes"
+                    name = "King Ninja Shoes";
+                    gearType = "shoes";
                 } else if (rem_sub === 16) {
-                    name = "King Ring"
+                    name = "King Ring";
+                    gearType = "ring";
                 } else {
-                    name = "King Necklace"
+                    name = "King Necklace";
+                    gearType = "neclace";
                 }
+                let main_stat = getMainStat(random_number/100, gearType);
+                let substats = getSubStats(random_number/10000, gearType, rarity);
+                return [name, rarity, main_stat, substats];
             }
         } else {
             if (rem < 70) {
                 rarity = 1;
+                let gearType = "weapon";
                 let rem_sub = random_number % 18;
                 if (rem_sub === 0) {
-                    name = "Wooden Sword"
+                    name = "Wooden Sword";
+                    gearType = "weapon";
                 } else if (rem_sub === 1) {
-                    name = "Copper Helmet"
+                    name = "Copper Helmet";
+                    gearType = "helmet";
                 } else if (rem_sub === 2) {
-                    name = "Copper Armor"
+                    name = "Copper Armor";
+                    gearType = "armor";
                 } else if (rem_sub === 3) {
-                    name = "Copper Shoes"
+                    name = "Copper Shoes";
+                    gearType = "shoes";
                 } else if (rem_sub === 4) {
-                    name = "Basic Bow"
+                    name = "Basic Bow";
+                    gearType = "weapon";
                 } else if (rem_sub === 5) {
-                    name = "Leather Helmet"
+                    name = "Leather Helmet";
+                    gearType = "helmet";
                 } else if (rem_sub === 6) {
-                    name = "Leather Armor"
+                    name = "Leather Armor";
+                    gearType = "armor";
                 } else if (rem_sub === 7) {
-                    name = "Leather Shoes"
+                    name = "Leather Shoes";
+                    gearType = "shoes";
                 } else if (rem_sub === 8) {
-                    name = "Basic Wand"
+                    name = "Basic Wand";
+                    gearType = "weapon";
                 } else if (rem_sub === 9) {
-                    name = "Silk Cap"
+                    name = "Silk Cap";
+                    gearType = "helmet";
                 } else if (rem_sub === 10) {
-                    name = "Silk Robe"
+                    name = "Silk Robe";
+                    gearType = "armor";
                 } else if (rem_sub === 11) {
-                    name = "Silk Shoes"
+                    name = "Silk Shoes";
+                    gearType = "shoes";
                 } else if (rem_sub === 12) {
-                    name = "Basic Dagger"
+                    name = "Basic Dagger";
+                    gearType = "weapon";
                 } else if (rem_sub === 13) {
-                    name = "Common Headband"
+                    name = "Common Headband";
+                    gearType = "helmet";
                 } else if (rem_sub === 14) {
-                    name = "White Shirt"
+                    name = "White Shirt";
+                    gearType = "armor";
                 } else if (rem_sub === 15) {
-                    name = "Soft Shoes"
+                    name = "Soft Shoes";
+                    gearType = "shoes";
                 } else if (rem_sub === 16) {
-                    name = "Copper Ring"
+                    name = "Copper Ring";
+                    gearType = "ring";
                 } else {
-                    name = "Copper Necklace"
+                    name = "Copper Necklace";
+                    gearType = "neclace";
                 }
+                let main_stat = getMainStat(random_number/100, gearType);
+                let substats = getSubStats(random_number/10000, gearType, rarity);
+                return [name, rarity, main_stat, substats];
             } else if (rem < 95) {
                 rarity = 2;
+                let gearType = "weapon";
                 let rem_sub = random_number % 18;
                 if (rem_sub === 0) {
-                    name = "Stone Sword"
+                    name = "Stone Sword";
+                    gearType = "weapon";
                 } else if (rem_sub === 1) {
-                    name = "Bronze Helmet"
+                    name = "Bronze Helmet";
+                    gearType = "helmet";
                 } else if (rem_sub === 2) {
-                    name = "Bronze Armor"
+                    name = "Bronze Armor";
+                    gearType = "armor";
                 } else if (rem_sub === 3) {
-                    name = "Bronze Shoes"
+                    name = "Bronze Shoes";
+                    gearType = "shoes";
                 } else if (rem_sub === 4) {
-                    name = "Apprentice Crossbow"
+                    name = "Apprentice Crossbow";
+                    gearType = "weapon";
                 } else if (rem_sub === 5) {
-                    name = "Hardened Leather Helmet"
+                    name = "Hardened Leather Helmet";
+                    gearType = "helmet";
                 } else if (rem_sub === 6) {
-                    name = "Hardened Leather Armor"
+                    name = "Hardened Leather Armor";
+                    gearType = "armor";
                 } else if (rem_sub === 7) {
-                    name = "Hardened Leather Boots"
+                    name = "Hardened Leather Boots";
+                    gearType = "shoes";
                 } else if (rem_sub === 8) {
-                    name = "Apprentice Staff"
+                    name = "Apprentice Staff";
+                    gearType = "weapon";
                 } else if (rem_sub === 9) {
-                    name = "Hardened Silk Cap"
+                    name = "Hardened Silk Cap";
+                    gearType = "helmet";
                 } else if (rem_sub === 10) {
-                    name = "Hardened Silk Robe"
+                    name = "Hardened Silk Robe";
+                    gearType = "armor";
                 } else if (rem_sub === 11) {
-                    name = "Hardened Silk Shoes"
+                    name = "Hardened Silk Shoes";
+                    gearType = "shoes";
                 } else if (rem_sub === 12) {
-                    name = "Dual Basic Daggers"
+                    name = "Dual Basic Daggers";
+                    gearType = "weapon";
                 } else if (rem_sub === 13) {
-                    name = "Apprentice Headband"
+                    name = "Apprentice Headband";
+                    gearType = "helmet";
                 } else if (rem_sub === 14) {
-                    name = "Apprentice Shirt"
+                    name = "Apprentice Shirt";
+                    gearType = "armor";
                 } else if (rem_sub === 15) {
-                    name = "Apprentice Slippers"
+                    name = "Apprentice Slippers";
+                    gearType = "shoes";
                 } else if (rem_sub === 16) {
-                    name = "Bronze Ring"
+                    name = "Bronze Ring";
+                    gearType = "ring";
                 } else {
-                    name = "Bronze Neclace"
+                    name = "Bronze Neclace";
+                    gearType = "neclace";
                 }
+                let main_stat = getMainStat(random_number/100, gearType);
+                let substats = getSubStats(random_number/10000, gearType, rarity);
+                return [name, rarity, main_stat, substats];
             } else {
                 rarity = 3;
+                let gearType = "weapon";
                 let rem_sub = random_number % 18;
                 if (rem_sub === 0) {
-                    name = "Steel Sword"
+                    name = "Steel Sword";
+                    gearType =  "weapon";
                 } else if (rem_sub === 1) {
-                    name = "Steel Helmet"
+                    name = "Steel Helmet";
+                    gearType =  "helmet";
                 } else if (rem_sub === 2) {
-                    name = "Steel Armor"
+                    name = "Steel Armor";
+                    gearType =  "armor";
                 } else if (rem_sub === 3) {
-                    name = "Steel Shoes"
+                    name = "Steel Shoes";
+                    gearType =  "shoes";
                 } else if (rem_sub === 4) {
-                    name = "Intermediate Archer Bow"
+                    name = "Intermediate Archer Bow";
+                    gearType =  "weapon";
                 } else if (rem_sub === 5) {
-                    name = "Light Huntsman Helmet"
+                    name = "Light Huntsman Helmet";
+                    gearType =  "helmet";
                 } else if (rem_sub === 6) {
-                    name = "Light Huntsman Armor"
+                    name = "Light Huntsman Armor";
+                    gearType =  "armor";
                 } else if (rem_sub === 7) {
-                    name = "Light Huntsman Boots"
+                    name = "Light Huntsman Boots";
+                    gearType = "shoes"
                 } else if (rem_sub === 8) {
-                    name = "Enchanted Wand"
+                    name = "Enchanted Wand";
+                    gearType = "weapon";
                 } else if (rem_sub === 9) {
-                    name = "Enchanted Silk Cap"
+                    name = "Enchanted Silk Cap";
+                    gearType = "helmet";
                 } else if (rem_sub === 10) {
-                    name = "Enchanted Silk Robe"
+                    name = "Enchanted Silk Robe";
+                    gearType = "armor";
                 } else if (rem_sub === 11) {
-                    name = "Enchanted Silk Shoes"
+                    name = "Enchanted Silk Shoes";
+                    gearType = "shoes";
                 } else if (rem_sub === 12) {
-                    name = "Steel Kusarigama"
+                    name = "Steel Kusarigama";
+                    gearType = "weapon"
                 } else if (rem_sub === 13) {
-                    name = "Black Soft Beanie"
+                    name = "Black Soft Beanie";
+                    gearType = "helmet";
                 } else if (rem_sub === 14) {
-                    name = "Black Soft Hoodie"
+                    name = "Black Soft Hoodie";
+                    gearType = "armor";
                 } else if (rem_sub === 15) {
-                    name = "Black Soft Shoes"
+                    name = "Black Soft Shoes";
+                    gearType = "shoes";
                 } else if (rem_sub === 16) {
-                    name = "Silver Ring"
+                    name = "Silver Ring";
+                    gearType = "ring";
                 } else {
-                    name = "Silver Necklace"
+                    name = "Silver Necklace";
+                    gearType = "neclace";
                 }
+                let main_stat = getMainStat(random_number/100, gearType);
+                let substats = getSubStats(random_number/10000, gearType, rarity);
+                return [name, rarity, main_stat, substats];
             }
         }
     }

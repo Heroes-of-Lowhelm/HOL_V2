@@ -103,7 +103,7 @@ async function heroesSingleMint(token_id, is_high_level) {
 }
 async function gearsSingleMint(token_id, is_high_level) {
     let random = await getSingleRandom();
-    let [name, rarity] = await generateGearsTrait(random, is_high_level);
+    let [name, rarity, main_stat, substats] = await generateGearsTrait(random, is_high_level);
 }
 
 (async () => {
