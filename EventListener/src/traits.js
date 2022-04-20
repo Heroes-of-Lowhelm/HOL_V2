@@ -16,32 +16,46 @@ function getMainStat(number, gearType) {
     } else if (gearType === "ring") {
         let possibilities = ["ACC", "RES", "ATK", "ATK%", "HP%", "HP", "DEF", "DEF%"];
         let rem = number % 8;
-        return  possibilities[rem];
+        return possibilities[rem];
     } else {
         console.log("The gear type is not correct");
         return "";
     }
 }
-function getSubStatType(number, gearType) {
+
+function getSubStatTypes(number, gearType, substat_num) {
+    let sub_stat_types = [];
     if (gearType === "weapon") {
-        let possibilities = ["ATK%", "HP", "HP%", "SPD", "CRIT.RATE%", "CRIT.DMG%", "ACC", "RES"];
-        let rem = number % 8;
-        let sub_stat_type = possibilities[rem];
-        return sub_stat_type;
+        let possibilities = ["ATK%", "HP", "HP%", "SPD", "CRIT.RATE%", "CRIT.DMG%", "ACC%", "RES"];
+        for (let i = 0; i < substat_num; i++) {
+            let rem = number % (8 - i);
+            let sub_stat_type = possibilities[rem];
+            possibilities.splice(rem, 1);
+            sub_stat_types.push(sub_stat_type);
+            number = Math.floor(number / 10);
+        }
     } else if (gearType === "helmet" || gearType === "shoes" || gearType === "neclace" || gearType === "ring") {
-        let possibilities = ["ATK%", "ATK", "HP", "HP%", "DEF", "DEF%", "SPD", "CRIT.RATE%", "CRIT.DMG%", "ACC", "RES"]
-        let rem = number % 11;
-        let sub_stat_type = possibilities[rem];
-        return sub_stat_type;
+        let possibilities = ["ATK%", "ATK", "HP", "HP%", "DEF", "DEF%", "SPD", "CRIT.RATE%", "CRIT.DMG%", "ACC%", "RES"];
+        for (let i = 0; i < substat_num; i++) {
+            let rem = number % (11 - i);
+            let sub_stat_type = possibilities[rem];
+            possibilities.splice(rem, 1);
+            sub_stat_types.push(sub_stat_type);
+            number = Math.floor(number / 10);
+        }
     } else if (gearType === "armor") {
-        let possibilities = ["HP", "HP%", "DEF%", "SPD", "CRIT.RATE%", "CRIT.DMG%", "ACC", "RES"];
-        let rem = number % 8;
-        let sub_stat_type = possibilities[rem];
-        return sub_stat_type;
+        let possibilities = ["HP", "HP%", "DEF%", "SPD", "CRIT.RATE%", "CRIT.DMG%", "ACC%", "RES"];
+        for (let i = 0; i < substat_num; i++) {
+            let rem = number % (8 - i);
+            let sub_stat_type = possibilities[rem];
+            possibilities.splice(rem, 1);
+            sub_stat_types.push(sub_stat_type);
+            number = Math.floor(number / 10);
+        }
     } else {
         console.log("gear type is not correct");
-        return "";
     }
+    return sub_stat_types;
 }
 
 function getSubStatNum(number, gearType, level) {
@@ -50,25 +64,25 @@ function getSubStatNum(number, gearType, level) {
         if (gearType === "ATK") {
             sub_stat_num = 10 + number % 91;
         } else if (gearType === "ATK%") {
-            sub_stat_num = 1 + number % 4;
-        } else  if (gearType === "DEF") {
+            sub_stat_num = 1 + number % 4 * Math.random().toFixed(2);
+        } else if (gearType === "DEF") {
             sub_stat_num = 10 + number % 91;
         } else if (gearType === "DEF%") {
-            sub_stat_num = 1 + number % 4;
+            sub_stat_num = 1 + number % 4 * Math.random().toFixed(2);
         } else if (gearType === "HP") {
             sub_stat_num = 20 + number % 131;
         } else if (gearType === "HP%") {
-            sub_stat_num = 1 + number % 4;
+            sub_stat_num = 1 + number % 4 * Math.random().toFixed(2);
         } else if (gearType === "SPD") {
             sub_stat_num = 1 + number % 3;
         } else if (gearType === "CRIT.DMG%") {
-            sub_stat_num = 3 + number % 3;
+            sub_stat_num = 3 + number % 3 * Math.random().toFixed(2);
         } else if (gearType === "CRIT.RATE%") {
-            sub_stat_num = 2 + number % 3;
+            sub_stat_num = 2 + number % 3 * Math.random().toFixed(2);
         } else if (gearType === "ACC%") {
-            sub_stat_num = 1 + number % 4;
+            sub_stat_num = 1 + number % 4 * Math.random().toFixed(2);
         } else {
-            sub_stat_num = 1 + number % 4;
+            sub_stat_num = 1 + number % 4 * Math.random().toFixed(2);
         }
         return sub_stat_num;
     } else if (level === 3) {
@@ -76,25 +90,25 @@ function getSubStatNum(number, gearType, level) {
         if (gearType === "ATK") {
             sub_stat_num = 15 + number % 86;
         } else if (gearType === "ATK%") {
-            sub_stat_num = 2 + number % 5;
-        } else  if (gearType === "DEF") {
+            sub_stat_num = 2 + number % 5 * Math.random().toFixed(2);
+        } else if (gearType === "DEF") {
             sub_stat_num = 15 + number % 86;
         } else if (gearType === "DEF%") {
-            sub_stat_num = 2 + number % 5;
+            sub_stat_num = 2 + number % 5 * Math.random().toFixed(2);
         } else if (gearType === "HP") {
             sub_stat_num = 30 + number % 121;
         } else if (gearType === "HP%") {
-            sub_stat_num = 2 + number % 5;
+            sub_stat_num = 2 + number % 5 * Math.random().toFixed(2);
         } else if (gearType === "SPD") {
             sub_stat_num = 1 + number % 4;
         } else if (gearType === "CRIT.DMG%") {
-            sub_stat_num = 3 + number % 4;
+            sub_stat_num = 3 + number % 4 * Math.random().toFixed(2);
         } else if (gearType === "CRIT.RATE%") {
-            sub_stat_num = 2 + number % 4;
+            sub_stat_num = 2 + number % 4 * Math.random().toFixed(2);
         } else if (gearType === "ACC%") {
-            sub_stat_num = 2 + number % 5;
+            sub_stat_num = 2 + number % 5 * Math.random().toFixed(2);
         } else {
-            sub_stat_num = 2 + number % 5;
+            sub_stat_num = 2 + number % 5 * Math.random().toFixed(2);
         }
         return sub_stat_num;
     } else if (level === 4) {
@@ -102,25 +116,25 @@ function getSubStatNum(number, gearType, level) {
         if (gearType === "ATK") {
             sub_stat_num = 20 + number % 131;
         } else if (gearType === "ATK%") {
-            sub_stat_num = 3 + number % 6;
-        } else  if (gearType === "DEF") {
+            sub_stat_num = 3 + number % 6 * Math.random().toFixed(2);
+        } else if (gearType === "DEF") {
             sub_stat_num = 20 + number % 131;
         } else if (gearType === "DEF%") {
-            sub_stat_num = 3 + number % 6;
+            sub_stat_num = 3 + number % 6 * Math.random().toFixed(2);
         } else if (gearType === "HP") {
             sub_stat_num = 30 + number % 161;
         } else if (gearType === "HP%") {
-            sub_stat_num = 3 + number % 6;
+            sub_stat_num = 3 + number % 6 * Math.random().toFixed(2);
         } else if (gearType === "SPD") {
             sub_stat_num = 1 + number % 5;
         } else if (gearType === "CRIT.DMG%") {
-            sub_stat_num = 3 + number % 5;
+            sub_stat_num = 3 + number % 5 * Math.random().toFixed(2);
         } else if (gearType === "CRIT.RATE%") {
-            sub_stat_num = 3 + number % 4;
+            sub_stat_num = 3 + number % 4 * Math.random().toFixed(2);
         } else if (gearType === "ACC%") {
-            sub_stat_num = 3 + number % 6;
+            sub_stat_num = 3 + number % 6 * Math.random().toFixed(2);
         } else {
-            sub_stat_num = 3 + number % 6;
+            sub_stat_num = 3 + number % 6 * Math.random().toFixed(2);
         }
         return sub_stat_num;
     } else {
@@ -128,140 +142,88 @@ function getSubStatNum(number, gearType, level) {
         if (gearType === "ATK") {
             sub_stat_num = 30 + number % 171;
         } else if (gearType === "ATK%") {
-            sub_stat_num = 4 + number % 7;
-        } else  if (gearType === "DEF") {
+            sub_stat_num = 4 + number % 7 * Math.random().toFixed(2);
+        } else if (gearType === "DEF") {
             sub_stat_num = 30 + number % 171;
         } else if (gearType === "DEF%") {
-            sub_stat_num = 4 + number % 7;
+            sub_stat_num = 4 + number % 7 * Math.random().toFixed(2);
         } else if (gearType === "HP") {
             sub_stat_num = 50 + number % 201;
         } else if (gearType === "HP%") {
-            sub_stat_num = 4 + number % 7;
+            sub_stat_num = 4 + number % 7 * Math.random().toFixed(2);
         } else if (gearType === "SPD") {
             sub_stat_num = 2 + number % 5;
         } else if (gearType === "CRIT.DMG%") {
-            sub_stat_num = 4 + number % 5;
+            sub_stat_num = 4 + number % 5 * Math.random().toFixed(2);
         } else if (gearType === "CRIT.RATE%") {
-            sub_stat_num = 3 + number % 5;
+            sub_stat_num = 3 + number % 5 * Math.random().toFixed(2);
         } else if (gearType === "ACC%") {
-            sub_stat_num = 4 + number % 7;
+            sub_stat_num = 4 + number % 7 * Math.random().toFixed(2);
         } else {
-            sub_stat_num = 4 + number % 7;
+            sub_stat_num = 4 + number % 7 * Math.random().toFixed(2);
         }
         return sub_stat_num;
     }
 }
 
-function getSubStatLv1(number, gearType) {
-    if (number % 100 === 0) {
-        let sub_stat_type = getSubStatType(number, gearType);
-        let sub_stat_num = getSubStatNum(number, sub_stat_type, 1)
-        return [{type: sub_stat_type, value: sub_stat_num}];
+function getSubStatsTypeAndNumber(number, gearType, level) {
+    if (level === 1) {
+        //Chaotic
+        if (number % 100 === 0) {
+            let sub_stat_types = getSubStatTypes(number, gearType, 1);
+            let sub_stat_num = getSubStatNum(number, sub_stat_types[0], 1)
+            return [{type: sub_stat_types[0], value: sub_stat_num}];
+        } else {
+            return []
+        }
     } else {
-        return []
+        let sub_stat_types = [];
+        let sub_stats = [];
+        if (number % 100 === 0) {
+            sub_stat_types = getSubStatTypes(number, gearType, level);
+        } else {
+            sub_stat_types = getSubStatTypes(number, gearType, level - 1);
+        }
+        for (let j=0; j < sub_stat_types.length; j++) {
+            let sub_stat_type = sub_stat_types[j];
+            let sub_stat_num = getSubStatNum(number, sub_stat_type, level);
+            sub_stats.push({type: sub_stat_type, value: sub_stat_num});
+            number = Math.floor(number / 10);
+        }
+        if (level === 5) {
+            let rem = number % 7;
+            if (rem === 0) {
+                sub_stats.push({type: "Set", value: "Life"});
+            } else if (rem === 1) {
+                sub_stats.push({type: "Set", value: "Harden"});
+            } else if (rem === 2) {
+                sub_stats.push({type: "Set", value: "Strength"});
+            } else if (rem === 3) {
+                sub_stats.push({type: "Set", value: "Degenerate"});
+            } else if (rem === 4) {
+                sub_stats.push({type: "Set", value: "Effectiveness"});
+            } else if (rem === 5) {
+                sub_stats.push({type: "Set", value: "Explosion"});
+            } else {
+                sub_stats.push({type: "Set", value: "Vampire"});
+            }
+        }
+        return sub_stats;
     }
-}
 
-function getSubStatLv2(number, gearType) {
-    let sub_stat_type = getSubStatType(number, gearType);
-    let sub_stat_num = getSubStatNum(number, sub_stat_type, 2);
-    let substats = [{type: sub_stat_type, value: sub_stat_num}];
-    if (number % 100 === 0) {
-        number = Math.floor(number / 10);
-        sub_stat_type = getSubStatType(number, gearType);
-        sub_stat_num = getSubStatNum(number, sub_stat_type, 2);
-        substats.push({type: sub_stat_type, value: sub_stat_num});
-    }
-    return substats;
-}
-
-function getSubStatLv3(number, gearType) {
-    let substats = [];
-    if (number % 100 === 0) {
-        for (let i = 0; i < 3; i ++) {
-            let sub_stat_type = getSubStatType(number, gearType);
-            let sub_stat_num = getSubStatNum(number, sub_stat_type, 3);
-            substats.push({type: sub_stat_type, value: sub_stat_num});
-            number = Math.floor(number / 10);
-        }
-    } else {
-        for (let i = 0; i < 2; i ++) {
-            let sub_stat_type = getSubStatType(number, gearType);
-            let sub_stat_num = getSubStatNum(number, sub_stat_type, 3);
-            substats.push({type: sub_stat_type, value: sub_stat_num});
-            number = Math.floor(number / 10);
-        }
-    }
-    return substats;
-}
-
-function getSubStatLv4(number, gearType) {
-    let substats = [];
-    if (number % 100 === 0) {
-        for (let i = 0; i < 4; i ++) {
-            let sub_stat_type = getSubStatType(number, gearType);
-            let sub_stat_num = getSubStatNum(number, sub_stat_type, 4);
-            substats.push({type: sub_stat_type, value: sub_stat_num});
-            number = Math.floor(number / 10);
-        }
-    } else {
-        for (let i = 0; i < 3; i ++) {
-            let sub_stat_type = getSubStatType(number, gearType);
-            let sub_stat_num = getSubStatNum(number, sub_stat_type, 4);
-            substats.push({type: sub_stat_type, value: sub_stat_num});
-            number = Math.floor(number / 10);
-        }
-    }
-    return substats;
-}
-
-function getSubStatLv5(number, gearType) {
-    let substats = [];
-    if (number % 100 === 0) {
-        for (let i = 0; i < 5; i ++) {
-            let sub_stat_type = getSubStatType(number, gearType);
-            let sub_stat_num = getSubStatNum(number, sub_stat_type, 5);
-            substats.push({type: sub_stat_type, value: sub_stat_num});
-            number = Math.floor(number / 10);
-        }
-    } else {
-        for (let i = 0; i < 4; i ++) {
-            let sub_stat_type = getSubStatType(number, gearType);
-            let sub_stat_num = getSubStatNum(number, sub_stat_type, 5);
-            substats.push({type: sub_stat_type, value: sub_stat_num});
-            number = Math.floor(number / 10);
-        }
-    }
-    let rem = number & 7;
-    if (rem === 0) {
-        substats.push({type: "Set", value: "Life"});
-    } else if (rem === 1) {
-        substats.push({type: "Set", value: "Harden"});
-    } else if (rem === 2) {
-        substats.push({type: "Set", value: "Strength"});
-    } else if (rem === 3) {
-        substats.push({type: "Set", value: "Degenerate"});
-    } else if (rem === 4) {
-        substats.push({type: "Set", value: "Effectiveness"});
-    } else if (rem === 5) {
-        substats.push({type: "Set", value: "Explosion"});
-    } else {
-        substats.push({type: "Set", value: "Vampire"});
-    }
-    return substats;
 }
 
 function getSubStats(number, gearType, rarity) {
     if (rarity === 1) {
-        return getSubStatLv1(number, gearType);
+        return getSubStatsTypeAndNumber(number, gearType, 1);
     } else if (rarity === 2) {
-        return getSubStatLv2(number, gearType);
+        return getSubStatsTypeAndNumber(number, gearType, 2);
     } else if (rarity === 3) {
-        return  getSubStatLv3(number, gearType);
+        return getSubStatsTypeAndNumber(number, gearType, 3);
     } else if (rarity === 4) {
-        return  getSubStatLv4(number, gearType);
+        return getSubStatsTypeAndNumber(number, gearType, 4);
     } else {
-        return getSubStatLv5(number, gearType);
+        return getSubStatsTypeAndNumber(number, gearType, 5);
     }
 }
 
@@ -304,15 +266,15 @@ module.exports = {
             if (rem < 80) {
                 rarity = 3;
                 let rem_sub = random_number % 4;
-               if (rem_sub === 0) {
-                   name = "Shasta";
-               } else if (rem_sub === 1) {
-                   name = "Calix";
-               } else if (rem_sub === 2) {
-                   name = "Mia";
-               } else {
-                   name = "Gui-Ping";
-               }
+                if (rem_sub === 0) {
+                    name = "Shasta";
+                } else if (rem_sub === 1) {
+                    name = "Calix";
+                } else if (rem_sub === 2) {
+                    name = "Mia";
+                } else {
+                    name = "Gui-Ping";
+                }
             } else if (rem < 98) {
                 rarity = 4;
                 let rem_sub = random_number % 5;
@@ -396,25 +358,25 @@ module.exports = {
                 let rem_sub = random_number % 18;
                 if (rem_sub === 0) {
                     name = "Steel Sword";
-                    gearType =  "weapon";
+                    gearType = "weapon";
                 } else if (rem_sub === 1) {
                     name = "Steel Helmet";
-                    gearType =  "helmet";
+                    gearType = "helmet";
                 } else if (rem_sub === 2) {
                     name = "Steel Armor";
-                    gearType =  "armor";
+                    gearType = "armor";
                 } else if (rem_sub === 3) {
                     name = "Steel Shoes";
-                    gearType =  "shoes";
+                    gearType = "shoes";
                 } else if (rem_sub === 4) {
                     name = "Intermediate Archer Bow";
-                    gearType =  "weapon";
+                    gearType = "weapon";
                 } else if (rem_sub === 5) {
                     name = "Light Huntsman Helmet";
-                    gearType =  "helmet";
+                    gearType = "helmet";
                 } else if (rem_sub === 6) {
                     name = "Light Huntsman Armor";
-                    gearType =  "armor";
+                    gearType = "armor";
                 } else if (rem_sub === 7) {
                     name = "Light Huntsman Boots";
                     gearType = "shoes"
@@ -449,8 +411,8 @@ module.exports = {
                     name = "Silver Necklace";
                     gearType = "neclace";
                 }
-                let main_stat = getMainStat(Math.floor(random_number/10), gearType);
-                let substats = getSubStats(Math.floor(random_number/100), gearType, rarity);
+                let main_stat = getMainStat(Math.floor(random_number / 10), gearType);
+                let substats = getSubStats(Math.floor(random_number / 100), gearType, rarity);
                 return [name, rarity, main_stat, substats];
             } else if (rem < 98) {
                 rarity = 4;
@@ -511,8 +473,8 @@ module.exports = {
                     name = "Gold Necklace";
                     gearType = "neclace";
                 }
-                let main_stat = getMainStat(Math.floor(random_number/10), gearType);
-                let substats = getSubStats(Math.floor(random_number/100), gearType, rarity);
+                let main_stat = getMainStat(Math.floor(random_number / 10), gearType);
+                let substats = getSubStats(Math.floor(random_number / 100), gearType, rarity);
                 return [name, rarity, main_stat, substats];
             } else {
                 rarity = 5;
@@ -573,8 +535,8 @@ module.exports = {
                     name = "King Necklace";
                     gearType = "neclace";
                 }
-                let main_stat = getMainStat(Math.floor(random_number/10), gearType);
-                let substats = getSubStats(Math.floor(random_number/100), gearType, rarity);
+                let main_stat = getMainStat(Math.floor(random_number / 10), gearType);
+                let substats = getSubStats(Math.floor(random_number / 100), gearType, rarity);
                 return [name, rarity, main_stat, substats];
             }
         } else {
@@ -637,8 +599,8 @@ module.exports = {
                     name = "Copper Necklace";
                     gearType = "neclace";
                 }
-                let main_stat = getMainStat(Math.floor(random_number/10), gearType);
-                let substats = getSubStats(Math.floor(random_number/100), gearType, rarity);
+                let main_stat = getMainStat(Math.floor(random_number / 10), gearType);
+                let substats = getSubStats(Math.floor(random_number / 100), gearType, rarity);
                 return [name, rarity, main_stat, substats];
             } else if (rem < 95) {
                 rarity = 2;
@@ -699,8 +661,8 @@ module.exports = {
                     name = "Bronze Neclace";
                     gearType = "neclace";
                 }
-                let main_stat = getMainStat(Math.floor(random_number/10), gearType);
-                let substats = getSubStats(Math.floor(random_number/100), gearType, rarity);
+                let main_stat = getMainStat(Math.floor(random_number / 10), gearType);
+                let substats = getSubStats(Math.floor(random_number / 100), gearType, rarity);
                 return [name, rarity, main_stat, substats];
             } else {
                 rarity = 3;
@@ -708,25 +670,25 @@ module.exports = {
                 let rem_sub = random_number % 18;
                 if (rem_sub === 0) {
                     name = "Steel Sword";
-                    gearType =  "weapon";
+                    gearType = "weapon";
                 } else if (rem_sub === 1) {
                     name = "Steel Helmet";
-                    gearType =  "helmet";
+                    gearType = "helmet";
                 } else if (rem_sub === 2) {
                     name = "Steel Armor";
-                    gearType =  "armor";
+                    gearType = "armor";
                 } else if (rem_sub === 3) {
                     name = "Steel Shoes";
-                    gearType =  "shoes";
+                    gearType = "shoes";
                 } else if (rem_sub === 4) {
                     name = "Intermediate Archer Bow";
-                    gearType =  "weapon";
+                    gearType = "weapon";
                 } else if (rem_sub === 5) {
                     name = "Light Huntsman Helmet";
-                    gearType =  "helmet";
+                    gearType = "helmet";
                 } else if (rem_sub === 6) {
                     name = "Light Huntsman Armor";
-                    gearType =  "armor";
+                    gearType = "armor";
                 } else if (rem_sub === 7) {
                     name = "Light Huntsman Boots";
                     gearType = "shoes"
@@ -761,8 +723,8 @@ module.exports = {
                     name = "Silver Necklace";
                     gearType = "neclace";
                 }
-                let main_stat = getMainStat(Math.floor(random_number/10), gearType);
-                let substats = getSubStats(Math.floor(random_number/100), gearType, rarity);
+                let main_stat = getMainStat(Math.floor(random_number / 10), gearType);
+                let substats = getSubStats(Math.floor(random_number / 100), gearType, rarity);
                 return [name, rarity, main_stat, substats];
             }
         }

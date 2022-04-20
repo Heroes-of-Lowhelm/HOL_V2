@@ -164,9 +164,9 @@ async function gearsBatchMint(token_id, is_high_level) {
     } catch (e) {
         console.log("err while listening events", e)
     }
-/*    try {
-        await heroesBatchMint(1, true);
+    try {
+        await gearsBatchMint(1, true);
     } catch (e) {
         console.log(e)
-    }*/
+    }
 })()
