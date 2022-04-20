@@ -1,10 +1,7 @@
 async function getRandom() {
-    // return uint256 random number
-    let returnRand = '';
-    for (let i = 0; i < 5; i++) {
-        returnRand += (Math.floor(Math.random() * (2 ** 32 - 1))).toString();
-    }
-    return returnRand
+    
+    returnRand = (Math.floor(Math.random() * (2 ** 32 - 1)));
+    return returnRand;
 }
 
 module.exports = {
@@ -21,7 +18,7 @@ module.exports = {
         }
         let randomNumber = await getRandom();
         let rangedRand = 95 + Math.floor(Math.random() * 5);
-        let lastRand = randomNumber + rangedRand;
+        let lastRand = Math.floor(randomNumber/100) * 100 + rangedRand;
         randomNumbers.push(lastRand);
         return randomNumbers;
     },
@@ -35,7 +32,7 @@ module.exports = {
         let randomNumber = await getRandom();
         // 80 ~ 98 random number
         let rangedRand = 80 + Math.floor(Math.random() * 18);
-        let lastRand = randomNumber + rangedRand;
+        let lastRand = Math.floor(randomNumber/100) * 100 + rangedRand;
         randomNumbers.push(lastRand);
         return randomNumbers;
     }

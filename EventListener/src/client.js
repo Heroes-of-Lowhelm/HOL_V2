@@ -86,6 +86,22 @@ async function ListenForEvents() {
                     let token_id = eventObj["params"][0]["value"];
                     await gearsSingleMint(token_id, true);
                 }
+                if (eventObj["_eventname"] === "BatchMint13Heroes") {
+                    let token_id = eventObj["params"][0]["value"];
+                    await heroesBatchMint(token_id, false);
+                }
+                if (eventObj["_eventname"] === "BatchMint35Heroes") {
+                    let token_id = eventObj["params"][0]["value"];
+                    await heroesBatchMint(token_id, true);
+                }
+                if (eventObj["_eventname"] === "BatchMint13Gears") {
+                    let token_id = eventObj["params"][0]["value"];
+                    await gearsBatchMint(token_id, false);
+                }
+                if (eventObj["_eventname"] === "BatchMint35Gears") {
+                    let token_id = eventObj["params"][0]["value"];
+                    await gearsBatchMint(token_id, true);
+                }
             }
         }
     });
@@ -106,6 +122,37 @@ async function gearsSingleMint(token_id, is_high_level) {
     let [name, rarity, main_stat, substats] = await generateGearsTrait(random, is_high_level);
 }
 
+async function heroesBatchMint(token_id, is_high_level) {
+    let randoms;
+    if (is_high_level) {
+        randoms = await get35BatchRandom();
+    } else {
+        randoms = await get13BatchRandom();
+    }
+    for (let i = 0; i < 10; i ++) {
+        let [name, rarity] = await generateHeroesTrait(randoms[i], is_high_level);
+        console.log("name===>", name);
+        console.log("rarity===>", rarity);
+        console.log("=============")
+    }
+}
+async function gearsBatchMint(token_id, is_high_level) {
+    let randoms;
+    if (is_high_level) {
+        randoms = await get35BatchRandom();
+    } else {
+        randoms = await get13BatchRandom();
+    }
+    for (let i = 0; i < 10; i ++) {
+        let [name, rarity, main_stat, substats] = await generateGearsTrait(randoms[i], is_high_level);
+        console.log("name===>", name);
+        console.log("rarity===>", rarity);
+        console.log("main_stat===>", main_stat);
+        console.log("substats===>", substats);
+        console.log("====================");
+    }
+}
+
 (async () => {
     try {
         await initializeNetwork();
@@ -117,4 +164,9 @@ async function gearsSingleMint(token_id, is_high_level) {
     } catch (e) {
         console.log("err while listening events", e)
     }
+/*    try {
+        await heroesBatchMint(1, true);
+    } catch (e) {
+        console.log(e)
+    }*/
 })()

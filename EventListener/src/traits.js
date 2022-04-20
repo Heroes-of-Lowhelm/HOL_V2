@@ -167,7 +167,7 @@ function getSubStatLv2(number, gearType) {
     let sub_stat_num = getSubStatNum(number, sub_stat_type, 2);
     let substats = [{type: sub_stat_type, value: sub_stat_num}];
     if (number % 100 === 0) {
-        number = number / 100;
+        number = Math.floor(number / 10);
         sub_stat_type = getSubStatType(number, gearType);
         sub_stat_num = getSubStatNum(number, sub_stat_type, 2);
         substats.push({type: sub_stat_type, value: sub_stat_num});
@@ -182,14 +182,14 @@ function getSubStatLv3(number, gearType) {
             let sub_stat_type = getSubStatType(number, gearType);
             let sub_stat_num = getSubStatNum(number, sub_stat_type, 3);
             substats.push({type: sub_stat_type, value: sub_stat_num});
-            number = number / 100;
+            number = Math.floor(number / 10);
         }
     } else {
         for (let i = 0; i < 2; i ++) {
             let sub_stat_type = getSubStatType(number, gearType);
             let sub_stat_num = getSubStatNum(number, sub_stat_type, 3);
             substats.push({type: sub_stat_type, value: sub_stat_num});
-            number = number / 100;
+            number = Math.floor(number / 10);
         }
     }
     return substats;
@@ -202,14 +202,14 @@ function getSubStatLv4(number, gearType) {
             let sub_stat_type = getSubStatType(number, gearType);
             let sub_stat_num = getSubStatNum(number, sub_stat_type, 4);
             substats.push({type: sub_stat_type, value: sub_stat_num});
-            number = number / 100;
+            number = Math.floor(number / 10);
         }
     } else {
         for (let i = 0; i < 3; i ++) {
             let sub_stat_type = getSubStatType(number, gearType);
             let sub_stat_num = getSubStatNum(number, sub_stat_type, 4);
             substats.push({type: sub_stat_type, value: sub_stat_num});
-            number = number / 100;
+            number = Math.floor(number / 10);
         }
     }
     return substats;
@@ -222,14 +222,14 @@ function getSubStatLv5(number, gearType) {
             let sub_stat_type = getSubStatType(number, gearType);
             let sub_stat_num = getSubStatNum(number, sub_stat_type, 5);
             substats.push({type: sub_stat_type, value: sub_stat_num});
-            number = number / 100;
+            number = Math.floor(number / 10);
         }
     } else {
         for (let i = 0; i < 4; i ++) {
             let sub_stat_type = getSubStatType(number, gearType);
             let sub_stat_num = getSubStatNum(number, sub_stat_type, 5);
             substats.push({type: sub_stat_type, value: sub_stat_num});
-            number = number / 100;
+            number = Math.floor(number / 10);
         }
     }
     let rem = number & 7;
@@ -449,8 +449,8 @@ module.exports = {
                     name = "Silver Necklace";
                     gearType = "neclace";
                 }
-                let main_stat = getMainStat(random_number/100, gearType);
-                let substats = getSubStats(random_number/10000, gearType, rarity);
+                let main_stat = getMainStat(Math.floor(random_number/10), gearType);
+                let substats = getSubStats(Math.floor(random_number/100), gearType, rarity);
                 return [name, rarity, main_stat, substats];
             } else if (rem < 98) {
                 rarity = 4;
@@ -511,8 +511,8 @@ module.exports = {
                     name = "Gold Necklace";
                     gearType = "neclace";
                 }
-                let main_stat = getMainStat(random_number/100, gearType);
-                let substats = getSubStats(random_number/10000, gearType, rarity);
+                let main_stat = getMainStat(Math.floor(random_number/10), gearType);
+                let substats = getSubStats(Math.floor(random_number/100), gearType, rarity);
                 return [name, rarity, main_stat, substats];
             } else {
                 rarity = 5;
@@ -573,8 +573,8 @@ module.exports = {
                     name = "King Necklace";
                     gearType = "neclace";
                 }
-                let main_stat = getMainStat(random_number/100, gearType);
-                let substats = getSubStats(random_number/10000, gearType, rarity);
+                let main_stat = getMainStat(Math.floor(random_number/10), gearType);
+                let substats = getSubStats(Math.floor(random_number/100), gearType, rarity);
                 return [name, rarity, main_stat, substats];
             }
         } else {
@@ -637,8 +637,8 @@ module.exports = {
                     name = "Copper Necklace";
                     gearType = "neclace";
                 }
-                let main_stat = getMainStat(random_number/100, gearType);
-                let substats = getSubStats(random_number/10000, gearType, rarity);
+                let main_stat = getMainStat(Math.floor(random_number/10), gearType);
+                let substats = getSubStats(Math.floor(random_number/100), gearType, rarity);
                 return [name, rarity, main_stat, substats];
             } else if (rem < 95) {
                 rarity = 2;
@@ -699,8 +699,8 @@ module.exports = {
                     name = "Bronze Neclace";
                     gearType = "neclace";
                 }
-                let main_stat = getMainStat(random_number/100, gearType);
-                let substats = getSubStats(random_number/10000, gearType, rarity);
+                let main_stat = getMainStat(Math.floor(random_number/10), gearType);
+                let substats = getSubStats(Math.floor(random_number/100), gearType, rarity);
                 return [name, rarity, main_stat, substats];
             } else {
                 rarity = 3;
@@ -761,8 +761,8 @@ module.exports = {
                     name = "Silver Necklace";
                     gearType = "neclace";
                 }
-                let main_stat = getMainStat(random_number/100, gearType);
-                let substats = getSubStats(random_number/10000, gearType, rarity);
+                let main_stat = getMainStat(Math.floor(random_number/10), gearType);
+                let substats = getSubStats(Math.floor(random_number/100), gearType, rarity);
                 return [name, rarity, main_stat, substats];
             }
         }
