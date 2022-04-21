@@ -17,6 +17,7 @@ const msgVersion = 1; // current msgVersion
 const VERSION = bytes.pack(chainId, msgVersion);
 const {getSingleRandom, get13BatchRandom, get35BatchRandom} = require("./randomizer");
 const {generateDLHeroesTrait, generateHeroesTrait, generateGearsTrait} = require("./traits");
+const axios = require("axios");
 
 const privateKey = process.env.OWNER_WALLET_PRIVATEKEY;
 zilliqa.wallet.addByPrivateKey(privateKey);
@@ -112,14 +113,109 @@ async function ListenForEvents() {
 async function dlHeroesSingleMint(token_id) {
     let random = await getSingleRandom();
     let [name, rarity] = await generateDLHeroesTrait(random);
+    var data = JSON.stringify({
+        "pinataMetadata": {
+            "name": `dl-heroes-${token_id}.metadata.json`
+        },
+        "pinataContent": {
+            "description": `Dark/Light Heroes NFT #${token_id}`,
+            "tokenId": `${token_id}`,
+            "name": `${name}`,
+            "image": `ipfs://${process.env.DL_HEROES_ASSET_CID}/${name}.png`,
+            "rarity": `${rarity}`
+        }
+    });
+
+    var config = {
+        method: 'post',
+        url: 'https://api.pinata.cloud/pinning/pinJSONToIPFS',
+        headers: {
+            'pinata_api_key': `${process.env.PINATA_API_KEY}`,
+            'pinata_secret_api_key': `${process.env.PINATA_SECURITY_API_KEY}`,
+            'Content-Type': 'application/json'
+        },
+        data : data
+    };
+
+    axios(config)
+        .then(function (response) {
+            console.log(JSON.stringify(response.data));
+        })
+        .catch(function (error) {
+            console.log(error);
+        });
+
 }
 async function heroesSingleMint(token_id, is_high_level) {
     let random = await getSingleRandom();
     let [name, rarity] = await generateHeroesTrait(random, is_high_level);
+    var data = JSON.stringify({
+        "pinataMetadata": {
+            "name": `heroes-${token_id}.metadata.json`
+        },
+        "pinataContent": {
+            "description": `Heroes NFT #${token_id}`,
+            "tokenId": `${token_id}`,
+            "name": `${name}`,
+            "image": `ipfs://${process.env.HEROES_ASSET_CID}/${name}.png`,
+            "rarity": `${rarity}`
+        }
+    });
+
+    var config = {
+        method: 'post',
+        url: 'https://api.pinata.cloud/pinning/pinJSONToIPFS',
+        headers: {
+            'pinata_api_key': `${process.env.PINATA_API_KEY}`,
+            'pinata_secret_api_key': `${process.env.PINATA_SECURITY_API_KEY}`,
+            'Content-Type': 'application/json'
+        },
+        data : data
+    };
+
+    axios(config)
+        .then(function (response) {
+            console.log(JSON.stringify(response.data));
+        })
+        .catch(function (error) {
+            console.log(error);
+        });
 }
 async function gearsSingleMint(token_id, is_high_level) {
     let random = await getSingleRandom();
     let [name, rarity, main_stat, substats] = await generateGearsTrait(random, is_high_level);
+    var data = JSON.stringify({
+        "pinataMetadata": {
+            "name": `gears-${token_id}.metadata.json`
+        },
+        "pinataContent": {
+            "description": `Gears NFT #${token_id}`,
+            "tokenId": `${token_id}`,
+            "name": `${name}`,
+            "image": `ipfs://${process.env.GEARS_ASSET_CID}/${name}.png`,
+            "rarity": `${rarity}`,
+            "main_stat": `${main_stat}`
+        }
+    });
+
+    var config = {
+        method: 'post',
+        url: 'https://api.pinata.cloud/pinning/pinJSONToIPFS',
+        headers: {
+            'pinata_api_key': `${process.env.PINATA_API_KEY}`,
+            'pinata_secret_api_key': `${process.env.PINATA_SECURITY_API_KEY}`,
+            'Content-Type': 'application/json'
+        },
+        data : data
+    };
+
+    axios(config)
+        .then(function (response) {
+            console.log(JSON.stringify(response.data));
+        })
+        .catch(function (error) {
+            console.log(error);
+        });
 }
 
 async function heroesBatchMint(token_id, is_high_level) {
@@ -165,7 +261,7 @@ async function gearsBatchMint(token_id, is_high_level) {
         console.log("err while listening events", e)
     }
     try {
-        await gearsBatchMint(1, true);
+        await dlHeroesSingleMint(1, true);
     } catch (e) {
         console.log(e)
     }
