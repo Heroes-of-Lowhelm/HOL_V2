@@ -69,39 +69,40 @@ async function ListenForEvents() {
 
                 if (eventObj["_eventname"] === "Mint13Heroes") {
                     let token_id = eventObj["params"][0]["value"];
-                    await heroesSingleMint(token_id, false);
+                    let to = eventObj["params"][1]["value"];
+                    await heroesSingleMint(token_id, false, to);
                 }
                 if (eventObj["_eventname"] === "Mint35Heroes") {
                     let token_id = eventObj["params"][0]["value"];
-                    await heroesSingleMint(token_id, true);
+                    await heroesSingleMint(token_id, true, to);
                 }
                 if (eventObj["_eventname"] === "MintDLHeroes") {
                     let token_id = eventObj["params"][0]["value"];
-                    await dlHeroesSingleMint(token_id);
+                    await dlHeroesSingleMint(token_id, to);
                 }
                 if (eventObj["_eventname"] === "Mint13Gears") {
                     let token_id = eventObj["params"][0]["value"];
-                    await gearsSingleMint(token_id, false);
+                    await gearsSingleMint(token_id, false, to);
                 }
                 if (eventObj["_eventname"] === "Mint35Gears") {
                     let token_id = eventObj["params"][0]["value"];
-                    await gearsSingleMint(token_id, true);
+                    await gearsSingleMint(token_id, true, to);
                 }
                 if (eventObj["_eventname"] === "BatchMint13Heroes") {
                     let token_id = eventObj["params"][0]["value"];
-                    await heroesBatchMint(token_id, false);
+                    await heroesBatchMint(token_id, false, to);
                 }
                 if (eventObj["_eventname"] === "BatchMint35Heroes") {
                     let token_id = eventObj["params"][0]["value"];
-                    await heroesBatchMint(token_id, true);
+                    await heroesBatchMint(token_id, true, to);
                 }
                 if (eventObj["_eventname"] === "BatchMint13Gears") {
                     let token_id = eventObj["params"][0]["value"];
-                    await gearsBatchMint(token_id, false);
+                    await gearsBatchMint(token_id, false, to);
                 }
                 if (eventObj["_eventname"] === "BatchMint35Gears") {
                     let token_id = eventObj["params"][0]["value"];
-                    await gearsBatchMint(token_id, true);
+                    await gearsBatchMint(token_id, true, to);
                 }
             }
         }
@@ -110,7 +111,7 @@ async function ListenForEvents() {
 }
 
 // Generate Single Random && Generate Trait && Upload to IFPS
-async function dlHeroesSingleMint(token_id) {
+async function dlHeroesSingleMint(token_id, to){
     let random = await getSingleRandom();
     let [name, rarity] = await generateDLHeroesTrait(random);
     var data = JSON.stringify({
@@ -138,15 +139,48 @@ async function dlHeroesSingleMint(token_id) {
     };
 
     axios(config)
-        .then(function (response) {
+        .then(async function (response) {
             console.log(JSON.stringify(response.data));
+            let IpfsHash = response.data["IpfsHash"];
+            let tokenUri = "ipfs://" + IpfsHash;
+            // call mint function with tokenURI
+            const dlHeroesNFTContract = zilliqa.contracts.at(process.env.DL_HEROES_NFT_ADDRESS);
+            const callTx = await dlHeroesNFTContract.callWithoutConfirm(
+                'Mint',
+                [
+                    {
+                        vname: 'to',
+                        type: 'ByStr20',
+                        value: to,
+                    },
+                    {
+                        vname: 'token_uri',
+                        type: 'String',
+                        value: tokenUri,
+                    }
+                ],
+                {
+                    // amount, gasPrice and gasLimit must be explicitly provided
+                    version: VERSION,
+                    amount: new BN(0),
+                    gasPrice: myGasPrice,
+                    gasLimit: Long.fromNumber(8000),
+                },
+                false,
+            );
+            console.log("setting Random Number step 2===========>", callTx.id);
+            const confirmedTxn = await callTx.confirm(callTx.id);
+            console.log("setting Random Number step 3===========>", confirmedTxn.receipt);
+            if (confirmedTxn.receipt.success === true) {
+                console.log("==============Transaction is successful===============")
+            }
         })
         .catch(function (error) {
             console.log(error);
         });
 
 }
-async function heroesSingleMint(token_id, is_high_level) {
+async function heroesSingleMint(token_id, is_high_level, to){
     let random = await getSingleRandom();
     let [name, rarity] = await generateHeroesTrait(random, is_high_level);
     var data = JSON.stringify({
@@ -174,14 +208,47 @@ async function heroesSingleMint(token_id, is_high_level) {
     };
 
     axios(config)
-        .then(function (response) {
+        .then(async function (response) {
             console.log(JSON.stringify(response.data));
+            let IpfsHash = response.data["IpfsHash"];
+            let tokenUri = "ipfs://" + IpfsHash;
+            // call mint function with tokenURI
+            const heroesNFTContract = zilliqa.contracts.at(process.env.HEROES_NFT_ADDRESS);
+            const callTx = await heroesNFTContract.callWithoutConfirm(
+                'Mint',
+                [
+                    {
+                        vname: 'to',
+                        type: 'ByStr20',
+                        value: to,
+                    },
+                    {
+                        vname: 'token_uri',
+                        type: 'String',
+                        value: tokenUri,
+                    }
+                ],
+                {
+                    // amount, gasPrice and gasLimit must be explicitly provided
+                    version: VERSION,
+                    amount: new BN(0),
+                    gasPrice: myGasPrice,
+                    gasLimit: Long.fromNumber(8000),
+                },
+                false,
+            );
+            console.log("setting Random Number step 2===========>", callTx.id);
+            const confirmedTxn = await callTx.confirm(callTx.id);
+            console.log("setting Random Number step 3===========>", confirmedTxn.receipt);
+            if (confirmedTxn.receipt.success === true) {
+                console.log("==============Transaction is successful===============")
+            }
         })
         .catch(function (error) {
             console.log(error);
         });
 }
-async function gearsSingleMint(token_id, is_high_level) {
+async function gearsSingleMint(token_id, is_high_level, to){
     let random = await getSingleRandom();
     let [name, rarity, main_stat, substats] = await generateGearsTrait(random, is_high_level);
     var data = JSON.stringify({
@@ -210,15 +277,48 @@ async function gearsSingleMint(token_id, is_high_level) {
     };
 
     axios(config)
-        .then(function (response) {
+        .then(async function (response) {
             console.log(JSON.stringify(response.data));
+            let IpfsHash = response.data["IpfsHash"];
+            let tokenUri = "ipfs://" + IpfsHash;
+            // call mint function with tokenURI
+            const gearsNFTContract = zilliqa.contracts.at(process.env.GEARS_NFT_ADDRESS);
+            const callTx = await gearsNFTContract.callWithoutConfirm(
+                'Mint',
+                [
+                    {
+                        vname: 'to',
+                        type: 'ByStr20',
+                        value: to,
+                    },
+                    {
+                        vname: 'token_uri',
+                        type: 'String',
+                        value: tokenUri,
+                    }
+                ],
+                {
+                    // amount, gasPrice and gasLimit must be explicitly provided
+                    version: VERSION,
+                    amount: new BN(0),
+                    gasPrice: myGasPrice,
+                    gasLimit: Long.fromNumber(8000),
+                },
+                false,
+            );
+            console.log("setting Random Number step 2===========>", callTx.id);
+            const confirmedTxn = await callTx.confirm(callTx.id);
+            console.log("setting Random Number step 3===========>", confirmedTxn.receipt);
+            if (confirmedTxn.receipt.success === true) {
+                console.log("==============Transaction is successful===============")
+            }
         })
         .catch(function (error) {
             console.log(error);
         });
 }
 
-async function heroesBatchMint(token_id, is_high_level) {
+async function heroesBatchMint(token_id, is_high_level, to) {
     let randoms;
     if (is_high_level) {
         randoms = await get35BatchRandom();
@@ -232,7 +332,7 @@ async function heroesBatchMint(token_id, is_high_level) {
         console.log("=============")
     }
 }
-async function gearsBatchMint(token_id, is_high_level) {
+async function gearsBatchMint(token_id, is_high_level, to) {
     let randoms;
     if (is_high_level) {
         randoms = await get35BatchRandom();

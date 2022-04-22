@@ -206,20 +206,10 @@ transition Mint13Heroes()
 
         e = {
             _eventname : "Mint13Heroes";
-            token_id: token_id
+            token_id: token_id;
+            to: _sender
         };
-        event e;
-
-        (* Call Mint function *)
-        msg = {
-            _tag: "Mint";
-            _recipient: v;
-            _amount: Uint128 0;
-            to: _sender;
-            token_uri: ""
-        };
-        msgs = one_msg msg;
-        send msgs
+        event e
     | None =>
         err = CodeIsHeroesNotSet;
         ThrowError err
@@ -242,20 +232,10 @@ transition Mint13Gears()
 
         e = {
             _eventname : "Mint13Gears";
-            token_id: token_id
+            token_id: token_id;
+            to: _sender
         };
-        event e;
-
-        (* Call Mint function *)
-        msg = {
-            _tag: "Mint";
-            _recipient: v;
-            _amount: Uint128 0;
-            to: _sender;
-            token_uri: ""
-        };
-        msgs = one_msg msg;
-        send msgs
+        event e
     | None =>
         err = CodeIsGearsNotSet;
         ThrowError err
@@ -278,20 +258,10 @@ transition Mint35Heroes()
 
         e = {
             _eventname : "Mint35Heroes";
-            token_id: token_id
+            token_id: token_id;
+            to: _sender
         };
-        event e;
-
-        (* Call Mint function *)
-        msg = {
-            _tag: "Mint";
-            _recipient: v;
-            _amount: Uint128 0;
-            to: _sender;
-            token_uri: ""
-        };
-        msgs = one_msg msg;
-        send msgs
+        event e
     | None =>
         err = CodeIsHeroesNotSet;
         ThrowError err
@@ -314,20 +284,10 @@ transition Mint35Gears()
 
         e = {
             _eventname : "Mint35Gears";
-            token_id: token_id
+            token_id: token_id;
+            to: _sender
         };
-        event e;
-
-        (* Call Mint function *)
-        msg = {
-            _tag: "Mint";
-            _recipient: v;
-            _amount: Uint128 0;
-            to: _sender;
-            token_uri: ""
-        };
-        msgs = one_msg msg;
-        send msgs
+        event e
     | None =>
         err = CodeIsGearsNotSet;
         ThrowError err
@@ -350,20 +310,10 @@ transition MintDLHeroes()
 
         e = {
             _eventname : "MintDLHeroes";
-            token_id: token_id
+            token_id: token_id;
+            to: _sender
         };
-        event e;
-
-        (* Call Mint function *)
-        msg = {
-            _tag: "Mint";
-            _recipient: v;
-            _amount: Uint128 0;
-            to: _sender;
-            token_uri: ""
-        };
-        msgs = one_msg msg;
-        send msgs
+        event e
     | None =>
         err = CodeIsDlHeroesNotSet;
         ThrowError err
@@ -389,19 +339,10 @@ transition BatchMint13Heroes()
 
         e = {
             _eventname : "BatchMint13Heroes";
-            token_id: start_id
+            token_id: start_id;
+            to: _sender
         };
-        event e;
-
-        (* Call Mint function *)
-        msg = {
-            _tag: "BatchMint";
-            _recipient: v;
-            _amount: Uint128 0;
-            to_token_uri_pair_list: to_token_uri_pair_list
-        };
-        msgs = one_msg msg;
-        send msgs
+        event e
     | None =>
         err = CodeIsHeroesNotSet;
         ThrowError err
@@ -426,19 +367,10 @@ transition BatchMint13Gears()
 
         e = {
             _eventname : "BatchMint13Gears";
-            token_id: start_id
+            token_id: start_id;
+            to: _sender
         };
-        event e;
-
-        (* Call Mint function *)
-        msg = {
-            _tag: "BatchMint";
-            _recipient: v;
-            _amount: Uint128 0;
-            to_token_uri_pair_list: to_token_uri_pair_list
-        };
-        msgs = one_msg msg;
-        send msgs
+        event e
     | None =>
         err = CodeIsGearsNotSet;
         ThrowError err
@@ -463,19 +395,10 @@ transition BatchMint35Heroes()
 
         e = {
             _eventname : "BatchMint35Heroes";
-            token_id: start_id
+            token_id: start_id;
+            to: _sender
         };
-        event e;
-
-        (* Call Mint function *)
-        msg = {
-            _tag: "BatchMint";
-            _recipient: v;
-            _amount: Uint128 0;
-            to_token_uri_pair_list: to_token_uri_pair_list
-        };
-        msgs = one_msg msg;
-        send msgs
+        event e
     | None =>
         err = CodeIsHeroesNotSet;
         ThrowError err
@@ -500,19 +423,10 @@ transition BatchMint35Gears()
 
         e = {
             _eventname : "BatchMint35Gears";
-            token_id: start_id
+            token_id: start_id;
+            to: _sender
         };
-        event e;
-
-        (* Call Mint function *)
-        msg = {
-            _tag: "BatchMint";
-            _recipient: v;
-            _amount: Uint128 0;
-            to_token_uri_pair_list: to_token_uri_pair_list
-        };
-        msgs = one_msg msg;
-        send msgs
+        event e
     | None =>
         err = CodeIsGearsNotSet;
         ThrowError err
