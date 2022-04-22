@@ -45,7 +45,6 @@ async function initializeNetwork() {
 }
 
 
-
 // Listen for events from a contract - errors aren't caught
 async function ListenForEvents() {
     let mintContractAddress = process.env.MINT_CONTRACT_ADDRESS;
@@ -111,7 +110,7 @@ async function ListenForEvents() {
 }
 
 // Generate Single Random && Generate Trait && Upload to IFPS
-async function dlHeroesSingleMint(token_id, to){
+async function dlHeroesSingleMint(token_id, to) {
     let random = await getSingleRandom();
     let [name, rarity] = await generateDLHeroesTrait(random);
     var data = JSON.stringify({
@@ -135,7 +134,7 @@ async function dlHeroesSingleMint(token_id, to){
             'pinata_secret_api_key': `${process.env.PINATA_SECURITY_API_KEY}`,
             'Content-Type': 'application/json'
         },
-        data : data
+        data: data
     };
 
     axios(config)
@@ -180,7 +179,8 @@ async function dlHeroesSingleMint(token_id, to){
         });
 
 }
-async function heroesSingleMint(token_id, is_high_level, to){
+
+async function heroesSingleMint(token_id, is_high_level, to) {
     let random = await getSingleRandom();
     let [name, rarity] = await generateHeroesTrait(random, is_high_level);
     var data = JSON.stringify({
@@ -204,7 +204,7 @@ async function heroesSingleMint(token_id, is_high_level, to){
             'pinata_secret_api_key': `${process.env.PINATA_SECURITY_API_KEY}`,
             'Content-Type': 'application/json'
         },
-        data : data
+        data: data
     };
 
     axios(config)
@@ -248,9 +248,17 @@ async function heroesSingleMint(token_id, is_high_level, to){
             console.log(error);
         });
 }
-async function gearsSingleMint(token_id, is_high_level, to){
+
+async function gearsSingleMint(token_id, is_high_level, to) {
     let random = await getSingleRandom();
     let [name, rarity, main_stat, substats] = await generateGearsTrait(random, is_high_level);
+    let formattedSubstats = [];
+    for (let substat of substats) {
+        let type = substat["type"];
+        let value = substat["value"];
+        let formattedParam = `${type} +${value}`;
+        formattedSubstats.push(formattedParam);
+    }
     var data = JSON.stringify({
         "pinataMetadata": {
             "name": `gears-${token_id}.metadata.json`
@@ -261,7 +269,8 @@ async function gearsSingleMint(token_id, is_high_level, to){
             "name": `${name}`,
             "image": `ipfs://${process.env.GEARS_ASSET_CID}/${name}.png`,
             "rarity": `${rarity}`,
-            "main_stat": `${main_stat}`
+            "main_stat": `${main_stat}`,
+            "sub_stats": formattedSubstats
         }
     });
 
@@ -273,7 +282,7 @@ async function gearsSingleMint(token_id, is_high_level, to){
             'pinata_secret_api_key': `${process.env.PINATA_SECURITY_API_KEY}`,
             'Content-Type': 'application/json'
         },
-        data : data
+        data: data
     };
 
     axios(config)
@@ -325,13 +334,79 @@ async function heroesBatchMint(token_id, is_high_level, to) {
     } else {
         randoms = await get13BatchRandom();
     }
-    for (let i = 0; i < 10; i ++) {
+    let tokenUris = [];
+    let to_token_uri_pair = [];
+    for (let i = 0; i < 10; i++) {
         let [name, rarity] = await generateHeroesTrait(randoms[i], is_high_level);
-        console.log("name===>", name);
-        console.log("rarity===>", rarity);
-        console.log("=============")
+
+        var data = JSON.stringify({
+            "pinataMetadata": {
+                "name": `heroes-${token_id}.metadata.json`
+            },
+            "pinataContent": {
+                "description": `Heroes NFT #${token_id}`,
+                "tokenId": `${token_id}`,
+                "name": `${name}`,
+                "image": `ipfs://${process.env.HEROES_ASSET_CID}/${name}.png`,
+                "rarity": `${rarity}`
+            }
+        });
+        var config = {
+            method: 'post',
+            url: 'https://api.pinata.cloud/pinning/pinJSONToIPFS',
+            headers: {
+                'pinata_api_key': `${process.env.PINATA_API_KEY}`,
+                'pinata_secret_api_key': `${process.env.PINATA_SECURITY_API_KEY}`,
+                'Content-Type': 'application/json'
+            },
+            data: data
+        };
+
+        axios(config)
+            .then(async function (response) {
+                console.log(JSON.stringify(response.data));
+                let IpfsHash = response.data["IpfsHash"];
+                let tokenUri = "ipfs://" + IpfsHash;
+                tokenUris.push(tokenUri);
+            })
+            .catch(function (error) {
+                console.log(error);
+            });
+    }
+    for (let uri of tokenUris) {
+        to_token_uri_pair.push({
+            "constructor": "Pair",
+            "argtypes": ["ByStr20", "String"],
+            "arguments": [to, uri]
+        })
+    }
+    const heroesNFTContract = zilliqa.contracts.at(process.env.HEROES_NFT_ADDRESS);
+    const callTx = await heroesNFTContract.callWithoutConfirm(
+        'BatchMint',
+        [
+            {
+                vname: 'to_token_uri_pair_list',
+                type: 'List (Pair ByStr20 String)',
+                value: to_token_uri_pair,
+            }
+        ],
+        {
+            // amount, gasPrice and gasLimit must be explicitly provided
+            version: VERSION,
+            amount: new BN(0),
+            gasPrice: myGasPrice,
+            gasLimit: Long.fromNumber(8000),
+        },
+        false,
+    );
+    console.log("setting Random Number step 2===========>", callTx.id);
+    const confirmedTxn = await callTx.confirm(callTx.id);
+    console.log("setting Random Number step 3===========>", confirmedTxn.receipt);
+    if (confirmedTxn.receipt.success === true) {
+        console.log("==============Transaction is successful===============")
     }
 }
+
 async function gearsBatchMint(token_id, is_high_level, to) {
     let randoms;
     if (is_high_level) {
@@ -339,13 +414,85 @@ async function gearsBatchMint(token_id, is_high_level, to) {
     } else {
         randoms = await get13BatchRandom();
     }
-    for (let i = 0; i < 10; i ++) {
+    let tokenUris = [];
+    let to_token_uri_pair = [];
+    for (let i = 0; i < 10; i++) {
         let [name, rarity, main_stat, substats] = await generateGearsTrait(randoms[i], is_high_level);
-        console.log("name===>", name);
-        console.log("rarity===>", rarity);
-        console.log("main_stat===>", main_stat);
-        console.log("substats===>", substats);
-        console.log("====================");
+        let formattedSubstats = [];
+        for (let substat of substats) {
+            let type = substat["type"];
+            let value = substat["value"];
+            let formattedParam = `${type} +${value}`;
+            formattedSubstats.push(formattedParam);
+        }
+        var data = JSON.stringify({
+            "pinataMetadata": {
+                "name": `gears-${token_id}.metadata.json`
+            },
+            "pinataContent": {
+                "description": `Gears NFT #${token_id}`,
+                "tokenId": `${token_id}`,
+                "name": `${name}`,
+                "image": `ipfs://${process.env.GEARS_ASSET_CID}/${name}.png`,
+                "rarity": `${rarity}`,
+                "main_stat": `${main_stat}`,
+                "sub_stats": formattedSubstats
+            }
+        });
+
+        var config = {
+            method: 'post',
+            url: 'https://api.pinata.cloud/pinning/pinJSONToIPFS',
+            headers: {
+                'pinata_api_key': `${process.env.PINATA_API_KEY}`,
+                'pinata_secret_api_key': `${process.env.PINATA_SECURITY_API_KEY}`,
+                'Content-Type': 'application/json'
+            },
+            data: data
+        };
+        axios(config)
+            .then(async function (response) {
+                console.log(JSON.stringify(response.data));
+                let IpfsHash = response.data["IpfsHash"];
+                let tokenUri = "ipfs://" + IpfsHash;
+                tokenUris.push(tokenUri);
+            })
+            .catch(function (error) {
+                console.log(error);
+            });
+
+    }
+    for (let uri of tokenUris) {
+        to_token_uri_pair.push({
+            "constructor": "Pair",
+            "argtypes": ["ByStr20", "String"],
+            "arguments": [to, uri]
+        })
+    }
+    const gearsNFTContract = zilliqa.contracts.at(process.env.GEARS_NFT_ADDRESS);
+    const callTx = await gearsNFTContract.callWithoutConfirm(
+        'BatchMint',
+        [
+            {
+                vname: 'to_token_uri_pair_list',
+                type: 'List (Pair ByStr20 String)',
+                value: to_token_uri_pair,
+            }
+        ],
+        {
+            // amount, gasPrice and gasLimit must be explicitly provided
+            version: VERSION,
+            amount: new BN(0),
+            gasPrice: myGasPrice,
+            gasLimit: Long.fromNumber(8000),
+        },
+        false,
+    );
+    console.log("setting Random Number step 2===========>", callTx.id);
+    const confirmedTxn = await callTx.confirm(callTx.id);
+    console.log("setting Random Number step 3===========>", confirmedTxn.receipt);
+    if (confirmedTxn.receipt.success === true) {
+        console.log("==============Transaction is successful===============")
     }
 }
 
@@ -356,7 +503,7 @@ async function gearsBatchMint(token_id, is_high_level, to) {
         console.log("err while initializing====>", e);
     }
     try {
-        await  ListenForEvents();
+        await ListenForEvents();
     } catch (e) {
         console.log("err while listening events", e)
     }
