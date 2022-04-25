@@ -51,7 +51,7 @@ let two_msgs =
 contract DLHeroesEvolution
 (
   initial_contract_owner: ByStr20,
-  token: ByStr20 with contract field token_uris: Map Uint256 String end
+  token: ByStr20 with contract field token_uris: Map Uint256 String, field token_owners: Map Uint256 ByStr20 end
 )
 
 
@@ -98,10 +98,12 @@ transition EvolveHeroes(id_lv_max: Uint256, id_lv_any: Uint256)
   IsAdmin;
   max_token_uri <- & token.token_uris[id_lv_max];
   any_token_uri <- & token.token_uris[id_lv_any];
+  to <- & token.token_owners[id_lv_max];
   e = {
     _eventname: "EvolveDLHeroes";
     max_token_uri: max_token_uri;
-    any_token_uri: any_token_uri
+    any_token_uri: any_token_uri;
+    to: to
   };
   event e;
   

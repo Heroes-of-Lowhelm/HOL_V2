@@ -66,6 +66,7 @@ async function ListenForEvents() {
                 console.log("event name==============>", eventObj["_eventname"]);
                 console.log("event param=============>", eventObj["params"]);
 
+                // Mint Event Listener
                 if (eventObj["_eventname"] === "Mint13Heroes") {
                     let token_id = eventObj["params"][0]["value"];
                     let to = eventObj["params"][1]["value"];
@@ -73,35 +74,63 @@ async function ListenForEvents() {
                 }
                 if (eventObj["_eventname"] === "Mint35Heroes") {
                     let token_id = eventObj["params"][0]["value"];
+                    let to = eventObj["params"][1]["value"];
                     await heroesSingleMint(token_id, true, to);
                 }
                 if (eventObj["_eventname"] === "MintDLHeroes") {
                     let token_id = eventObj["params"][0]["value"];
+                    let to = eventObj["params"][1]["value"];
                     await dlHeroesSingleMint(token_id, to);
                 }
                 if (eventObj["_eventname"] === "Mint13Gears") {
                     let token_id = eventObj["params"][0]["value"];
+                    let to = eventObj["params"][1]["value"];
                     await gearsSingleMint(token_id, false, to);
                 }
                 if (eventObj["_eventname"] === "Mint35Gears") {
                     let token_id = eventObj["params"][0]["value"];
+                    let to = eventObj["params"][1]["value"];
                     await gearsSingleMint(token_id, true, to);
                 }
                 if (eventObj["_eventname"] === "BatchMint13Heroes") {
                     let token_id = eventObj["params"][0]["value"];
+                    let to = eventObj["params"][1]["value"];
                     await heroesBatchMint(token_id, false, to);
                 }
                 if (eventObj["_eventname"] === "BatchMint35Heroes") {
                     let token_id = eventObj["params"][0]["value"];
+                    let to = eventObj["params"][1]["value"];
                     await heroesBatchMint(token_id, true, to);
                 }
                 if (eventObj["_eventname"] === "BatchMint13Gears") {
                     let token_id = eventObj["params"][0]["value"];
+                    let to = eventObj["params"][1]["value"];
                     await gearsBatchMint(token_id, false, to);
                 }
                 if (eventObj["_eventname"] === "BatchMint35Gears") {
                     let token_id = eventObj["params"][0]["value"];
+                    let to = eventObj["params"][1]["value"];
                     await gearsBatchMint(token_id, true, to);
+                }
+
+                // Evolution Event Listener
+                if (eventObj["_eventname"] === "EvolveHeroes") {
+                    let max_token_uri = eventObj["params"][0]["value"];
+                    let any_token_uri = eventObj["params"][1]["value"];
+                    let to = eventObj["params"][2]["value"];
+                    await heroesEvolve(max_token_uri, any_token_uri, to);
+                }
+                if (eventObj["_eventname"] === "EvolveGears") {
+                    let max_token_uri = eventObj["params"][0]["value"];
+                    let any_token_uri = eventObj["params"][1]["value"];
+                    let to = eventObj["params"][2]["value"];
+                    await gearsEvolve(max_token_uri, any_token_uri, to);
+                }
+                if (eventObj["_eventname"] === "EvolveDLHeroes") {
+                    let max_token_uri = eventObj["params"][0]["value"];
+                    let any_token_uri = eventObj["params"][1]["value"];
+                    let to = eventObj["params"][2]["value"];
+                    await dlHeroesEvolve(max_token_uri, any_token_uri, to);
                 }
             }
         }
