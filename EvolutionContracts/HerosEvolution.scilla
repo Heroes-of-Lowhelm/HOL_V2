@@ -1,0 +1,145 @@
+(* SPDX-License-Identifier: MIT *)
+scilla_version 0
+
+(***************************************************)
+(*               Associated library                *)
+(***************************************************)
+import BoolUtils ListUtils IntUtils
+library HeroesEvolution
+
+(* Global variables *)
+let zero_address = 0x0000000000000000000000000000000000000000
+let false = False
+let true = True
+
+
+(* Error exception *)
+type Error =
+  | NotAdminError
+  | InvalidCallbackSender
+  | NotContractOwnerError
+  | AdminFoundError
+
+let make_error =
+  fun (result: Error) =>
+    let result_code =
+      match result with
+      | NotAdminError                     => Int32 -1
+      | InvalidCallbackSender             => Int32 -2
+      | NotContractOwnerError             => Int32 -3
+      | AdminFoundError                   => Int32 -4
+      end
+    in
+    { _exception: "Error"; code: result_code }
+
+
+(* Library functions *)
+let one_msg =
+  fun (msg: Message) =>
+    let nil_msg = Nil {Message} in
+    Cons {Message} msg nil_msg
+
+let two_msgs =
+  fun (msg1: Message) =>
+  fun (msg2: Message) =>
+    let msgs_tmp = one_msg msg2 in
+    Cons {Message} msg1 msgs_tmp
+(***************************************************)
+(*             The contract definition             *)
+(***************************************************)
+
+contract HeroesEvolution
+(
+  initial_contract_owner: ByStr20,
+  token: ByStr20 with contract field token_uris: Map Uint256 String end
+)
+
+
+(* Mutable fields *)
+(* Set for admins
+  initial_contract_owner is the admin by default *)
+field admins: Map ByStr20 Bool = 
+  let emp_map = Emp ByStr20 Bool in
+  builtin put emp_map initial_contract_owner true
+
+
+(* Procedures *)
+(* Emit Errors *)
+procedure Throw(error: Error)
+  e = make_error error;
+  throw e
+end
+
+(* Check is the address is admin or not *)
+procedure IsAdmin()
+  has_admin <- exists admins[_sender];
+  match has_admin with
+  | True =>
+  | False =>
+    error = NotAdminError;
+    Throw error
+  end
+end
+
+procedure RequireContractOwner()
+  cur_owner <- contract_owner;
+  is_contract_owner = builtin eq cur_owner _sender;
+  match is_contract_owner with
+  | True => 
+  | False =>
+    error = NotContractOwnerError;
+    Throw error
+  end
+end
+(* Transitions *)
+transition EvolveHeroes(id_lv_max: Uint256, id_lv_any: Uint256) 
+  IsAdmin;
+  max_token_uri <- & token.token_uris[id_lv_max];
+  any_token_uri <- & token.token_uris[id_lv_any];
+  e = {
+    _eventname: "EvolveHeroes";
+    max_token_uri: max_token_uri;
+    any_token_uri: any_token_uri
+  };
+  event e;
+
+
+transition EvolveHeroesCallback(id_evoluated: Uint256, id_lv_max: Uint256, id_lv_any: Uint256)
+    (* This call back must be invoked by the admin *)
+    IsAdmin;
+    (* Burn old NFTs here *)
+    msg_one = {
+      _tag: "Burn";
+      _recipient: token;
+      _amount: Uint128 0;
+      token_id: id_lv_max
+    };
+    msg_two = {
+      _tag: "Burn";
+      _recipient: token;
+      _amount: Uint128 0;
+      token_id: id_lv_any
+    };
+    msgs = two_msgs msg_one msg_two;
+    send msgs;
+    e = {
+      _eventname: "NFT Evolved";
+      id_evoluated: id_evoluated;
+      id_lv_max: id_lv_max;
+      id_lv_any: id_lv_any
+    };
+    event e
+end
+
+
+transition AddAdmin(admin: ByStr20)
+  RequireContractOwner;
+  has_admin <- exists admins[admin];
+  match has_admin with
+  | True =>
+    error = AdminFoundError;
+    Throw error
+  | False =>
+    admins[admin] := true
+  end
+end
