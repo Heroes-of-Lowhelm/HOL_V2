@@ -17,7 +17,8 @@ let true = True
 type Error =
   | NotAdminError
   | InvalidCallbackSender
-  | NftNotSetError
+  | NotContractOwnerError
+  | AdminFoundError
 
 let make_error =
   fun (result: Error) =>
@@ -25,7 +26,8 @@ let make_error =
       match result with
       | NotAdminError                     => Int32 -1
       | InvalidCallbackSender             => Int32 -2
-      | NftNotSetError                    => Int32 -3
+      | NotContractOwnerError             => Int32 -3
+      | AdminFoundError                   => Int32 -4
       end
     in
     { _exception: "Error"; code: result_code }
@@ -48,7 +50,8 @@ let two_msgs =
 
 contract DLHeroesEvolution
 (
-  initial_contract_owner: ByStr20
+  initial_contract_owner: ByStr20,
+  token: ByStr20 with contract field token_uris: Map Uint256 String end
 )
 
 
@@ -59,7 +62,6 @@ field admins: Map ByStr20 Bool =
   let emp_map = Emp ByStr20 Bool in
   builtin put emp_map initial_contract_owner true
 
-field heroes_nft_address: ByStr20 = zero_address
 
 (* Procedures *)
 (* Emit Errors *)
@@ -68,9 +70,10 @@ procedure Throw(error: Error)
   throw e
 end
 
+
 (* Check is the address is admin or not *)
-procedure IsAdmin(address: ByStr20)
-  has_admin <- exists admins[address];
+procedure IsAdmin()
+  has_admin <- exists admins[_sender];
   match has_admin with
   | True =>
   | False =>
@@ -79,57 +82,65 @@ procedure IsAdmin(address: ByStr20)
   end
 end
 
+procedure RequireContractOwner()
+  cur_owner <- contract_owner;
+  is_contract_owner = builtin eq cur_owner _sender;
+  match is_contract_owner with
+  | True => 
+  | False =>
+    error = NotContractOwnerError;
+    Throw error
+  end
+end
+
 (* Transitions *)
 transition EvolveHeroes(id_lv_max: Uint256, id_lv_any: Uint256) 
-  IsAdmin _sender;
-  heroes_nft_address_tmp <- heroes_nft_address;
-  is_zero_addr = builtin eq heroes_nft_address_tmp zero_address;
-  match is_zero_addr with
-  | True =>
-    error = NftNotSetError;
-    Throw error
-  | False =>
-    e = {
-      _eventname: "EvolveHeroes";
-      id_lv_max: id_lv_max;
-      id_lv_any: id_lv_any
-    };
-    msgs = one_msg msg;
-    send msgs
-  end
+  IsAdmin;
+  max_token_uri <- & token.token_uris[id_lv_max];
+  any_token_uri <- & token.token_uris[id_lv_any];
+  e = {
+    _eventname: "EvolveDLHeroes";
+    max_token_uri: max_token_uri;
+    any_token_uri: any_token_uri
+  };
+  event e;
   
 end
 
 transition EvolveHeroesCallback(id_evoluated: Uint256, id_lv_max: Uint256, id_lv_any: Uint256)
-  (* This call back must be invoked by the NFT contract *)
-  heroes_nft_address_tmp <- heroes_nft_address;
-  is_heroes_nft_addr = builtin eq heroes_nft_address_tmp _sender;
-  match is_heroes_nft_addr with
+  (* This call back must be invoked by the admins *)
+  IsAdmin;
+  msg_one = {
+    _tag: "Burn";
+    _recipient: token;
+    _amount: Uint128 0;
+    token_id: id_lv_max
+  };
+  msg_two = {
+    _tag: "Burn";
+    _recipient: token;
+    _amount: Uint128 0;
+    token_id: id_lv_any
+  };
+  msgs = two_msgs msg_one msg_two;
+  send msgs;
+  e = {
+    _eventname: "NFT Evolved";
+    id_evoluated: id_evoluated;
+    id_lv_max: id_lv_max;
+    id_lv_any: id_lv_any
+  };
+  event e
+end
+
+transition AddAdmin(admin: ByStr20)
+  RequireContractOwner;
+  has_admin <- exists admins[admin];
+  match has_admin with
   | True =>
-    (* Burn old NFTs here *)
-    msg_one = {
-      _tag: "Burn";
-      _recipient: heroes_nft_address_tmp;
-      _amount: Uint128 0;
-      token_id: id_lv_max
-    };
-    msg_two = {
-      _tag: "Burn";
-      _recipient: heroes_nft_address_tmp;
-      _amount: Uint128 0;
-      token_id: id_lv_any
-    };
-    msgs = two_msgs msg_one msg_two;
-    send msgs;
-    e = {
-      _eventname: "NFT Evolved";
-      id_evoluated: id_evoluated;
-      id_lv_max: id_lv_max;
-      id_lv_any: id_lv_any
-    };
-    event e
-  | False =>
-    error = InvalidCallbackSender;
+    error = AdminFoundError;
     Throw error
+  | False =>
+    admins[admin] := true
   end
 end

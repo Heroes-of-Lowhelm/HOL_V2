@@ -102,7 +102,7 @@ transition EvolveHeroes(id_lv_max: Uint256, id_lv_any: Uint256)
     any_token_uri: any_token_uri
   };
   event e;
-
+end
 
 transition EvolveHeroesCallback(id_evoluated: Uint256, id_lv_max: Uint256, id_lv_any: Uint256)
     (* This call back must be invoked by the admin *)
