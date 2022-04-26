@@ -26,7 +26,9 @@ let minGasPrice = 0;
 let balance = 0;
 let myGasPrice = 0;
 let isGasSufficient = false;
-
+let heroesEvolveCount = 0;
+let dlHeroesEvolveCount = 0;
+let gearsEvolveCount = 0;
 async function initializeNetwork() {
     // Get Balance
     balance = await zilliqa.blockchain.getBalance(address);
@@ -48,11 +50,18 @@ async function initializeNetwork() {
 // Listen for events from a contract - errors aren't caught
 async function ListenForEvents() {
     let mintContractAddress = process.env.MINT_CONTRACT_ADDRESS;
+    let heroesEvolutionAddress = process.env.HEROES_EVOLUTION_ADDRESS;
+    let dlHeroesEvolutionAddress = process.env.DL_HEROES_EVOLUTION_ADDRESS;
+    let gearsEvolutionAddress = process.env.GEARS_EVOLUTION_ADDRESS;
+
     const subscriber = zilliqa.subscriptionBuilder.buildEventLogSubscriptions(
         websocket,
         {
             addresses: [
-                mintContractAddress
+                mintContractAddress,
+                heroesEvolutionAddress,
+                dlHeroesEvolutionAddress,
+                gearsEvolutionAddress
             ],
         },
     );
@@ -118,19 +127,25 @@ async function ListenForEvents() {
                     let max_token_uri = eventObj["params"][0]["value"];
                     let any_token_uri = eventObj["params"][1]["value"];
                     let to = eventObj["params"][2]["value"];
-                    await heroesEvolve(max_token_uri, any_token_uri, to);
+                    let id_lv_max = eventObj["params"][3]["value"];
+                    let id_lv_any = eventObj["params"][4]["value"];
+                    await heroesEvolve(max_token_uri, any_token_uri, to, id_lv_max, id_lv_any);
                 }
                 if (eventObj["_eventname"] === "EvolveGears") {
                     let max_token_uri = eventObj["params"][0]["value"];
                     let any_token_uri = eventObj["params"][1]["value"];
                     let to = eventObj["params"][2]["value"];
-                    await gearsEvolve(max_token_uri, any_token_uri, to);
+                    let id_lv_max = eventObj["params"][3]["value"];
+                    let id_lv_any = eventObj["params"][4]["value"];
+                    await gearsEvolve(max_token_uri, any_token_uri, to, id_lv_max, id_lv_any);
                 }
                 if (eventObj["_eventname"] === "EvolveDLHeroes") {
                     let max_token_uri = eventObj["params"][0]["value"];
                     let any_token_uri = eventObj["params"][1]["value"];
                     let to = eventObj["params"][2]["value"];
-                    await dlHeroesEvolve(max_token_uri, any_token_uri, to);
+                    let id_lv_max = eventObj["params"][3]["value"];
+                    let id_lv_any = eventObj["params"][4]["value"];
+                    await dlHeroesEvolve(max_token_uri, any_token_uri, to, id_lv_max, id_lv_any);
                 }
             }
         }
@@ -138,24 +153,8 @@ async function ListenForEvents() {
     await subscriber.start();
 }
 
-// Generate Single Random && Generate Trait && Upload to IFPS
-async function dlHeroesSingleMint(token_id, to) {
-    let random = await getSingleRandom();
-    let [name, rarity] = await generateDLHeroesTrait(random);
-    var data = JSON.stringify({
-        "pinataMetadata": {
-            "name": `dl-heroes-${token_id}.metadata.json`
-        },
-        "pinataContent": {
-            "description": `Dark/Light Heroes NFT #${token_id}`,
-            "tokenId": `${token_id}`,
-            "name": `${name}`,
-            "image": `ipfs://${process.env.DL_HEROES_ASSET_CID}/${name}.png`,
-            "rarity": `${rarity}`
-        }
-    });
-
-    var config = {
+function getConfig(data) {
+    return {
         method: 'post',
         url: 'https://api.pinata.cloud/pinning/pinJSONToIPFS',
         headers: {
@@ -165,12 +164,242 @@ async function dlHeroesSingleMint(token_id, to) {
         },
         data: data
     };
+}
+
+// Evolve NFTs
+async function heroesEvolve(max_token_uri, any_token_uri, to, id_lv_max, id_lv_any) {
+    let config = {
+        method: 'get',
+        url: `https://gateway.pinata.cloud/ipfs/${max_token_uri}`,
+        headers: { }
+      };
+      heroesEvolveCount ++ ;
+      axios(config)
+      .then(function (response) {
+        let metadata = response.data;
+        let rarity = metadata.rarity;
+        let newRarity = rarity ++ ;
+        metadata.rarity = newRarity;
+        let data = JSON.stringify({
+            "pinataMetadata": {
+                "name": `dl-heroes-evolve-${heroesEvolveCount}.metadata.json`
+            },
+            "pinataContent": metadata
+        });
+        let config = getConfig(data);
+        axios(config).then(async res => {
+            let IpfsHash = res.data["IpfsHash"];
+            const evolutionContract = zilliqa.contracts.at(process.env.HEROES_EVOLUTION_ADDRESS);
+            const callTx = await evolutionContract.callWithoutConfirm(
+                'EvolveHeroesCallback',
+                [
+                    {
+                        vname: 'token_uri',
+                        type: 'String',
+                        value: IpfsHash,
+                    },
+                    {
+                        vname: 'to',
+                        type: 'ByStr20',
+                        value: to,
+                    },
+                    {
+                        vname: 'id_lv_max',
+                        type: 'Uint256',
+                        value: id_lv_max,
+                    },
+                    {
+                        vname: 'id_lv_any',
+                        type: 'Uint256',
+                        value: id_lv_any,
+                    }
+                ],
+                {
+                    // amount, gasPrice and gasLimit must be explicitly provided
+                    version: VERSION,
+                    amount: new BN(0),
+                    gasPrice: myGasPrice,
+                    gasLimit: Long.fromNumber(8000),
+                },
+                false,
+            );
+            console.log("setting Random Number step 2===========>", callTx.id);
+            const confirmedTxn = await callTx.confirm(callTx.id);
+            console.log("setting Random Number step 3===========>", confirmedTxn.receipt);
+            if (confirmedTxn.receipt.success === true) {
+                console.log("==============Transaction is successful===============")
+            }
+        }).catch(e => {
+
+        })
+      })
+      .catch(function (error) {
+        console.log(error);
+      });
+}
+async function gearsEvolve(max_token_uri, any_token_uri, to, id_lv_max, id_lv_any) {
+    let config = {
+        method: 'get',
+        url: `https://gateway.pinata.cloud/ipfs/${max_token_uri}`,
+        headers: { }
+    };
+    gearsEvolveCount ++ ;
+    axios(config)
+        .then(function (response) {
+            let metadata = response.data;
+            let rarity = metadata.rarity;
+            let newRarity = rarity ++ ;
+            metadata.rarity = newRarity;
+            let data = JSON.stringify({
+                "pinataMetadata": {
+                    "name": `dl-heroes-evolve-${gearsEvolveCount}.metadata.json`
+                },
+                "pinataContent": metadata
+            });
+            let config = getConfig(data);
+            axios(config).then(async res => {
+                let IpfsHash = res.data["IpfsHash"];
+                const evolutionContract = zilliqa.contracts.at(process.env.GEARS_EVOLUTION_ADDRESS);
+                const callTx = await evolutionContract.callWithoutConfirm(
+                    'EvolveGearsCallback',
+                    [
+                        {
+                            vname: 'token_uri',
+                            type: 'String',
+                            value: IpfsHash,
+                        },
+                        {
+                            vname: 'to',
+                            type: 'ByStr20',
+                            value: to,
+                        },
+                        {
+                            vname: 'id_lv_max',
+                            type: 'Uint256',
+                            value: id_lv_max,
+                        },
+                        {
+                            vname: 'id_lv_any',
+                            type: 'Uint256',
+                            value: id_lv_any,
+                        }
+                    ],
+                    {
+                        // amount, gasPrice and gasLimit must be explicitly provided
+                        version: VERSION,
+                        amount: new BN(0),
+                        gasPrice: myGasPrice,
+                        gasLimit: Long.fromNumber(8000),
+                    },
+                    false,
+                );
+                console.log("setting Random Number step 2===========>", callTx.id);
+                const confirmedTxn = await callTx.confirm(callTx.id);
+                console.log("setting Random Number step 3===========>", confirmedTxn.receipt);
+                if (confirmedTxn.receipt.success === true) {
+                    console.log("==============Transaction is successful===============")
+                }
+            }).catch(e => {
+
+            })
+        })
+        .catch(function (error) {
+            console.log(error);
+        });
+}
+async function dlHeroesEvolve(max_token_uri, any_token_uri, to, id_lv_max, id_lv_any) {
+    let config = {
+        method: 'get',
+        url: `https://gateway.pinata.cloud/ipfs/${max_token_uri}`,
+        headers: { }
+    };
+    dlHeroesEvolveCount ++ ;
+    axios(config)
+        .then(function (response) {
+            let metadata = response.data;
+            let rarity = metadata.rarity;
+            let newRarity = rarity ++ ;
+            metadata.rarity = newRarity;
+            let data = JSON.stringify({
+                "pinataMetadata": {
+                    "name": `dl-heroes-evolve-${dlHeroesEvolveCount}.metadata.json`
+                },
+                "pinataContent": metadata
+            });
+            let config = getConfig(data);
+            axios(config).then(async res => {
+                let IpfsHash = res.data["IpfsHash"];
+                const evolutionContract = zilliqa.contracts.at(process.env.DL_HEROES_EVOLUTION_ADDRESS);
+                const callTx = await evolutionContract.callWithoutConfirm(
+                    'EvolveHeroesCallback',
+                    [
+                        {
+                            vname: 'token_uri',
+                            type: 'String',
+                            value: IpfsHash,
+                        },
+                        {
+                            vname: 'to',
+                            type: 'ByStr20',
+                            value: to,
+                        },
+                        {
+                            vname: 'id_lv_max',
+                            type: 'Uint256',
+                            value: id_lv_max,
+                        },
+                        {
+                            vname: 'id_lv_any',
+                            type: 'Uint256',
+                            value: id_lv_any,
+                        }
+                    ],
+                    {
+                        // amount, gasPrice and gasLimit must be explicitly provided
+                        version: VERSION,
+                        amount: new BN(0),
+                        gasPrice: myGasPrice,
+                        gasLimit: Long.fromNumber(8000),
+                    },
+                    false,
+                );
+                console.log("setting Random Number step 2===========>", callTx.id);
+                const confirmedTxn = await callTx.confirm(callTx.id);
+                console.log("setting Random Number step 3===========>", confirmedTxn.receipt);
+                if (confirmedTxn.receipt.success === true) {
+                    console.log("==============Transaction is successful===============")
+                }
+            }).catch(e => {
+
+            })
+        })
+        .catch(function (error) {
+            console.log(error);
+        });
+}
+// Generate Single Random && Generate Trait && Upload to IFPS
+async function dlHeroesSingleMint(token_id, to) {
+    let random = await getSingleRandom();
+    let [name, rarity] = await generateDLHeroesTrait(random);
+    let data = JSON.stringify({
+        "pinataMetadata": {
+            "name": `dl-heroes-${token_id}.metadata.json`
+        },
+        "pinataContent": {
+            "description": `Dark/Light Heroes NFT #${token_id}`,
+            "name": `${name}`,
+            "image": `ipfs://${process.env.DL_HEROES_ASSET_CID}/${name}.png`,
+            "rarity": rarity
+        }
+    });
+
+    let config = getConfig(data)
 
     axios(config)
         .then(async function (response) {
             console.log(JSON.stringify(response.data));
             let IpfsHash = response.data["IpfsHash"];
-            let tokenUri = "ipfs://" + IpfsHash;
+            let tokenUri = IpfsHash;
             // call mint function with tokenURI
             const dlHeroesNFTContract = zilliqa.contracts.at(process.env.DL_HEROES_NFT_ADDRESS);
             const callTx = await dlHeroesNFTContract.callWithoutConfirm(
@@ -212,35 +441,25 @@ async function dlHeroesSingleMint(token_id, to) {
 async function heroesSingleMint(token_id, is_high_level, to) {
     let random = await getSingleRandom();
     let [name, rarity] = await generateHeroesTrait(random, is_high_level);
-    var data = JSON.stringify({
+    let data = JSON.stringify({
         "pinataMetadata": {
             "name": `heroes-${token_id}.metadata.json`
         },
         "pinataContent": {
             "description": `Heroes NFT #${token_id}`,
-            "tokenId": `${token_id}`,
             "name": `${name}`,
             "image": `ipfs://${process.env.HEROES_ASSET_CID}/${name}.png`,
-            "rarity": `${rarity}`
+            "rarity": rarity
         }
     });
 
-    var config = {
-        method: 'post',
-        url: 'https://api.pinata.cloud/pinning/pinJSONToIPFS',
-        headers: {
-            'pinata_api_key': `${process.env.PINATA_API_KEY}`,
-            'pinata_secret_api_key': `${process.env.PINATA_SECURITY_API_KEY}`,
-            'Content-Type': 'application/json'
-        },
-        data: data
-    };
+    let config = getConfig(data)
 
     axios(config)
         .then(async function (response) {
             console.log(JSON.stringify(response.data));
             let IpfsHash = response.data["IpfsHash"];
-            let tokenUri = "ipfs://" + IpfsHash;
+            let tokenUri = IpfsHash;
             // call mint function with tokenURI
             const heroesNFTContract = zilliqa.contracts.at(process.env.HEROES_NFT_ADDRESS);
             const callTx = await heroesNFTContract.callWithoutConfirm(
@@ -288,37 +507,27 @@ async function gearsSingleMint(token_id, is_high_level, to) {
         let formattedParam = `${type} +${value}`;
         formattedSubstats.push(formattedParam);
     }
-    var data = JSON.stringify({
+    let data = JSON.stringify({
         "pinataMetadata": {
             "name": `gears-${token_id}.metadata.json`
         },
         "pinataContent": {
             "description": `Gears NFT #${token_id}`,
-            "tokenId": `${token_id}`,
             "name": `${name}`,
             "image": `ipfs://${process.env.GEARS_ASSET_CID}/${name}.png`,
-            "rarity": `${rarity}`,
+            "rarity": rarity,
             "main_stat": `${main_stat}`,
             "sub_stats": formattedSubstats
         }
     });
 
-    var config = {
-        method: 'post',
-        url: 'https://api.pinata.cloud/pinning/pinJSONToIPFS',
-        headers: {
-            'pinata_api_key': `${process.env.PINATA_API_KEY}`,
-            'pinata_secret_api_key': `${process.env.PINATA_SECURITY_API_KEY}`,
-            'Content-Type': 'application/json'
-        },
-        data: data
-    };
+    let config = getConfig(data)
 
     axios(config)
         .then(async function (response) {
             console.log(JSON.stringify(response.data));
             let IpfsHash = response.data["IpfsHash"];
-            let tokenUri = "ipfs://" + IpfsHash;
+            let tokenUri = IpfsHash;
             // call mint function with tokenURI
             const gearsNFTContract = zilliqa.contracts.at(process.env.GEARS_NFT_ADDRESS);
             const callTx = await gearsNFTContract.callWithoutConfirm(
@@ -368,34 +577,24 @@ async function heroesBatchMint(token_id, is_high_level, to) {
     for (let i = 0; i < 10; i++) {
         let [name, rarity] = await generateHeroesTrait(randoms[i], is_high_level);
 
-        var data = JSON.stringify({
+        let data = JSON.stringify({
             "pinataMetadata": {
                 "name": `heroes-${token_id}.metadata.json`
             },
             "pinataContent": {
                 "description": `Heroes NFT #${token_id}`,
-                "tokenId": `${token_id}`,
                 "name": `${name}`,
                 "image": `ipfs://${process.env.HEROES_ASSET_CID}/${name}.png`,
-                "rarity": `${rarity}`
+                "rarity": rarity
             }
         });
-        var config = {
-            method: 'post',
-            url: 'https://api.pinata.cloud/pinning/pinJSONToIPFS',
-            headers: {
-                'pinata_api_key': `${process.env.PINATA_API_KEY}`,
-                'pinata_secret_api_key': `${process.env.PINATA_SECURITY_API_KEY}`,
-                'Content-Type': 'application/json'
-            },
-            data: data
-        };
+        let config = getConfig(data)
 
         axios(config)
             .then(async function (response) {
                 console.log(JSON.stringify(response.data));
                 let IpfsHash = response.data["IpfsHash"];
-                let tokenUri = "ipfs://" + IpfsHash;
+                let tokenUri = IpfsHash;
                 tokenUris.push(tokenUri);
             })
             .catch(function (error) {
@@ -454,7 +653,7 @@ async function gearsBatchMint(token_id, is_high_level, to) {
             let formattedParam = `${type} +${value}`;
             formattedSubstats.push(formattedParam);
         }
-        var data = JSON.stringify({
+        let data = JSON.stringify({
             "pinataMetadata": {
                 "name": `gears-${token_id}.metadata.json`
             },
@@ -463,27 +662,18 @@ async function gearsBatchMint(token_id, is_high_level, to) {
                 "tokenId": `${token_id}`,
                 "name": `${name}`,
                 "image": `ipfs://${process.env.GEARS_ASSET_CID}/${name}.png`,
-                "rarity": `${rarity}`,
+                "rarity": rarity,
                 "main_stat": `${main_stat}`,
                 "sub_stats": formattedSubstats
             }
         });
 
-        var config = {
-            method: 'post',
-            url: 'https://api.pinata.cloud/pinning/pinJSONToIPFS',
-            headers: {
-                'pinata_api_key': `${process.env.PINATA_API_KEY}`,
-                'pinata_secret_api_key': `${process.env.PINATA_SECURITY_API_KEY}`,
-                'Content-Type': 'application/json'
-            },
-            data: data
-        };
+        let config = getConfig(data)
         axios(config)
             .then(async function (response) {
                 console.log(JSON.stringify(response.data));
                 let IpfsHash = response.data["IpfsHash"];
-                let tokenUri = "ipfs://" + IpfsHash;
+                let tokenUri = IpfsHash;
                 tokenUris.push(tokenUri);
             })
             .catch(function (error) {

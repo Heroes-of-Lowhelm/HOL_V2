@@ -44,6 +44,13 @@ let two_msgs =
   fun (msg2: Message) =>
     let msgs_tmp = one_msg msg2 in
     Cons {Message} msg1 msgs_tmp
+
+let three_msgs =
+  fun (msg1: Message) =>
+  fun (msg2: Message) =>
+  fun (msg3: Message) =>
+    let msgs_tmp = two_msgs msg2 msg3 in
+    Cons {Message} msg1 msgs_tmp
 (***************************************************)
 (*             The contract definition             *)
 (***************************************************)
@@ -51,7 +58,8 @@ let two_msgs =
 contract DLHeroesEvolution
 (
   initial_contract_owner: ByStr20,
-  token: ByStr20 with contract field token_uris: Map Uint256 String, field token_owners: Map Uint256 ByStr20 end
+  token: ByStr20 with contract field token_uris: Map Uint256 String, field token_owners: Map Uint256 ByStr20 end,
+  mint_contract: ByStr20 with contract field dl_heroes_id_count: Uint256 end
 )
 
 
@@ -99,17 +107,19 @@ transition EvolveHeroes(id_lv_max: Uint256, id_lv_any: Uint256)
   max_token_uri <- & token.token_uris[id_lv_max];
   any_token_uri <- & token.token_uris[id_lv_any];
   to <- & token.token_owners[id_lv_max];
+
   e = {
     _eventname: "EvolveDLHeroes";
     max_token_uri: max_token_uri;
     any_token_uri: any_token_uri;
-    to: to
+    to: to;
+    id_lv_max: id_lv_max;
+    id_lv_any: id_lv_any
   };
-  event e;
-  
+  event e
 end
 
-transition EvolveHeroesCallback(id_evoluated: Uint256, id_lv_max: Uint256, id_lv_any: Uint256)
+transition EvolveHeroesCallback(token_uri: String, to: ByStr20, id_lv_max: Uint256, id_lv_any: Uint256)
   (* This call back must be invoked by the admins *)
   IsAdmin;
   msg_one = {
@@ -124,11 +134,17 @@ transition EvolveHeroesCallback(id_evoluated: Uint256, id_lv_max: Uint256, id_lv
     _amount: Uint128 0;
     token_id: id_lv_any
   };
-  msgs = two_msgs msg_one msg_two;
+  msg_three = {
+    _tag: "Mint";
+    _recipient: token;
+    _amount: Uint128 0;
+    to: to;
+    token_uri: token_uri
+  }
+  msgs = three_msgs msg_one msg_two msg_three;
   send msgs;
   e = {
     _eventname: "NFT Evolved";
-    id_evoluated: id_evoluated;
     id_lv_max: id_lv_max;
     id_lv_any: id_lv_any
   };
