@@ -171,7 +171,6 @@ async function heroesEvolve(max_token_uri, any_token_uri, to, id_lv_max, id_lv_a
     let config = {
         method: 'get',
         url: `https://gateway.pinata.cloud/ipfs/${max_token_uri}`,
-        headers: { }
       };
       heroesEvolveCount ++ ;
       axios(config)
@@ -182,7 +181,7 @@ async function heroesEvolve(max_token_uri, any_token_uri, to, id_lv_max, id_lv_a
         metadata.rarity = newRarity;
         let data = JSON.stringify({
             "pinataMetadata": {
-                "name": `dl-heroes-evolve-${heroesEvolveCount}.metadata.json`
+                "name": `heroes-evolve-${heroesEvolveCount}.metadata.json`
             },
             "pinataContent": metadata
         });
@@ -241,7 +240,6 @@ async function gearsEvolve(max_token_uri, any_token_uri, to, id_lv_max, id_lv_an
     let config = {
         method: 'get',
         url: `https://gateway.pinata.cloud/ipfs/${max_token_uri}`,
-        headers: { }
     };
     gearsEvolveCount ++ ;
     axios(config)
@@ -252,7 +250,7 @@ async function gearsEvolve(max_token_uri, any_token_uri, to, id_lv_max, id_lv_an
             metadata.rarity = newRarity;
             let data = JSON.stringify({
                 "pinataMetadata": {
-                    "name": `dl-heroes-evolve-${gearsEvolveCount}.metadata.json`
+                    "name": `gears-evolve-${gearsEvolveCount}.metadata.json`
                 },
                 "pinataContent": metadata
             });
@@ -311,7 +309,6 @@ async function dlHeroesEvolve(max_token_uri, any_token_uri, to, id_lv_max, id_lv
     let config = {
         method: 'get',
         url: `https://gateway.pinata.cloud/ipfs/${max_token_uri}`,
-        headers: { }
     };
     dlHeroesEvolveCount ++ ;
     axios(config)
