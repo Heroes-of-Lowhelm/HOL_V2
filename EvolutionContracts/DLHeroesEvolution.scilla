@@ -59,7 +59,6 @@ contract DLHeroesEvolution
 (
   initial_contract_owner: ByStr20,
   token: ByStr20 with contract field token_uris: Map Uint256 String, field token_owners: Map Uint256 ByStr20 end,
-  mint_contract: ByStr20 with contract field dl_heroes_id_count: Uint256 end
 )
 
 
