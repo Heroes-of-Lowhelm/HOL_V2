@@ -576,10 +576,10 @@ async function heroesBatchMint(token_id, is_high_level, to) {
 
         let data = JSON.stringify({
             "pinataMetadata": {
-                "name": `heroes-${token_id}.metadata.json`
+                "name": `heroes-${parseInt(token_id) + i}.metadata.json`
             },
             "pinataContent": {
-                "description": `Heroes NFT #${token_id}`,
+                "description": `Heroes NFT #${parseInt(token_id) + i}`,
                 "name": `${name}`,
                 "image": `ipfs://${process.env.HEROES_ASSET_CID}/${name}.png`,
                 "rarity": rarity
@@ -587,16 +587,24 @@ async function heroesBatchMint(token_id, is_high_level, to) {
         });
         let config = getConfig(data)
 
-        axios(config)
-            .then(async function (response) {
-                console.log(JSON.stringify(response.data));
-                let IpfsHash = response.data["IpfsHash"];
-                let tokenUri = IpfsHash;
-                tokenUris.push(tokenUri);
-            })
-            .catch(function (error) {
-                console.log(error);
-            });
+        try {
+            let response = await axios(config);
+            let IpfsHash = response.data["IpfsHash"];
+            let tokenUri = IpfsHash;
+            tokenUris.push(tokenUri);
+        } catch (e) {
+            console.log(e);
+        }
+        // axios(config)
+        //     .then(async function (response) {
+        //         console.log(JSON.stringify(response.data));
+        //         let IpfsHash = response.data["IpfsHash"];
+        //         let tokenUri = IpfsHash;
+        //         tokenUris.push(tokenUri);
+        //     })
+        //     .catch(function (error) {
+        //         console.log(error);
+        //     });
     }
     for (let uri of tokenUris) {
         to_token_uri_pair.push({
@@ -652,11 +660,10 @@ async function gearsBatchMint(token_id, is_high_level, to) {
         }
         let data = JSON.stringify({
             "pinataMetadata": {
-                "name": `gears-${token_id}.metadata.json`
+                "name": `gears-${parseInt(token_id) + i}.metadata.json`
             },
             "pinataContent": {
-                "description": `Gears NFT #${token_id}`,
-                "tokenId": `${token_id}`,
+                "description": `Gears NFT #${parseInt(token_id) + i}`,
                 "name": `${name}`,
                 "image": `ipfs://${process.env.GEARS_ASSET_CID}/${name}.png`,
                 "rarity": rarity,
@@ -665,17 +672,25 @@ async function gearsBatchMint(token_id, is_high_level, to) {
             }
         });
 
-        let config = getConfig(data)
-        axios(config)
-            .then(async function (response) {
-                console.log(JSON.stringify(response.data));
-                let IpfsHash = response.data["IpfsHash"];
-                let tokenUri = IpfsHash;
-                tokenUris.push(tokenUri);
-            })
-            .catch(function (error) {
-                console.log(error);
-            });
+        try {
+            let config = getConfig(data);
+            let response = await  axios(config);
+            let IpfsHash = response.data["IpfsHash"];
+            let tokenUri = IpfsHash;
+            tokenUris.push(tokenUri);
+        } catch (e) {
+            console.log(e)
+        }
+        // axios(config)
+        //     .then(async function (response) {
+        //         console.log(JSON.stringify(response.data));
+        //         let IpfsHash = response.data["IpfsHash"];
+        //         let tokenUri = IpfsHash;
+        //         tokenUris.push(tokenUri);
+        //     })
+        //     .catch(function (error) {
+        //         console.log(error);
+        //     });
 
     }
     for (let uri of tokenUris) {
@@ -722,10 +737,5 @@ async function gearsBatchMint(token_id, is_high_level, to) {
         await ListenForEvents();
     } catch (e) {
         console.log("err while listening events", e)
-    }
-    try {
-        await dlHeroesSingleMint(1, true);
-    } catch (e) {
-        console.log(e)
     }
 })()

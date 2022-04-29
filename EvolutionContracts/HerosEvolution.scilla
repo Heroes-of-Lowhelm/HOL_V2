@@ -58,7 +58,7 @@ let three_msgs =
 contract HeroesEvolution
 (
   initial_contract_owner: ByStr20,
-  token: ByStr20 with contract field token_uris: Map Uint256 String, field token_owners: Map Uint256 ByStr20 end,
+  token: ByStr20 with contract field token_uris: Map Uint256 String, field token_owners: Map Uint256 ByStr20 end
 )
 
 
@@ -68,7 +68,10 @@ contract HeroesEvolution
 field admins: Map ByStr20 Bool = 
   let emp_map = Emp ByStr20 Bool in
   builtin put emp_map initial_contract_owner true
-
+  
+(* Contract Owner *)
+(* Defaults to `initial_contract_owner` *)
+field contract_owner: ByStr20 = initial_contract_owner
 
 (* Procedures *)
 (* Emit Errors *)
@@ -112,7 +115,7 @@ transition EvolveHeroes(id_lv_max: Uint256, id_lv_any: Uint256)
     id_lv_max: id_lv_max;
     id_lv_any: id_lv_any
   };
-  event e;
+  event e
 end
 
 transition EvolveHeroesCallback(token_uri: String, to: ByStr20, id_lv_max: Uint256, id_lv_any: Uint256)
@@ -137,7 +140,7 @@ transition EvolveHeroesCallback(token_uri: String, to: ByStr20, id_lv_max: Uint2
       _amount: Uint128 0;
       to: to;
       token_uri: token_uri
-    }
+    };
     msgs = three_msgs msg_one msg_two msg_three;
     send msgs;
     e = {

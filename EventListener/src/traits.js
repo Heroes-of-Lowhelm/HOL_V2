@@ -14,7 +14,7 @@ function getMainStat(number, gearType) {
         let rem = number % 8;
         return possibilities[rem];
     } else if (gearType === "ring") {
-        let possibilities = ["ACC", "RES", "ATK", "ATK%", "HP%", "HP", "DEF", "DEF%"];
+        let possibilities = ["ACC", "RES%", "ATK", "ATK%", "HP%", "HP", "DEF", "DEF%"];
         let rem = number % 8;
         return possibilities[rem];
     } else {
@@ -26,7 +26,7 @@ function getMainStat(number, gearType) {
 function getSubStatTypes(number, gearType, substat_num) {
     let sub_stat_types = [];
     if (gearType === "weapon") {
-        let possibilities = ["ATK%", "HP", "HP%", "SPD", "CRIT.RATE%", "CRIT.DMG%", "ACC%", "RES"];
+        let possibilities = ["ATK%", "HP", "HP%", "SPD", "CRIT.RATE%", "CRIT.DMG%", "ACC%", "RES%"];
         for (let i = 0; i < substat_num; i++) {
             let rem = number % (8 - i);
             let sub_stat_type = possibilities[rem];
@@ -35,7 +35,7 @@ function getSubStatTypes(number, gearType, substat_num) {
             number = Math.floor(number / 10);
         }
     } else if (gearType === "helmet" || gearType === "shoes" || gearType === "neclace" || gearType === "ring") {
-        let possibilities = ["ATK%", "ATK", "HP", "HP%", "DEF", "DEF%", "SPD", "CRIT.RATE%", "CRIT.DMG%", "ACC%", "RES"];
+        let possibilities = ["ATK%", "ATK", "HP", "HP%", "DEF", "DEF%", "SPD", "CRIT.RATE%", "CRIT.DMG%", "ACC%", "RES%"];
         for (let i = 0; i < substat_num; i++) {
             let rem = number % (11 - i);
             let sub_stat_type = possibilities[rem];
@@ -44,7 +44,7 @@ function getSubStatTypes(number, gearType, substat_num) {
             number = Math.floor(number / 10);
         }
     } else if (gearType === "armor") {
-        let possibilities = ["HP", "HP%", "DEF%", "SPD", "CRIT.RATE%", "CRIT.DMG%", "ACC%", "RES"];
+        let possibilities = ["HP", "HP%", "DEF%", "SPD", "CRIT.RATE%", "CRIT.DMG%", "ACC%", "RES%"];
         for (let i = 0; i < substat_num; i++) {
             let rem = number % (8 - i);
             let sub_stat_type = possibilities[rem];
