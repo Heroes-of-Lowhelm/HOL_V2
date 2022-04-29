@@ -27,4 +27,3 @@ GEARS_EVOLUTION_ADDRESS=0x7efb34d49af48ac04cd5afdc5ba67466ec272cb0
 7. Deploy GearsEvolution contract
 * token address is required when deploy all of them, set each NFT's contract address
 ***
-Call AddMinter transition for NFT contracts (1, 2, 3) with the address of each NFT's evolution contracts.
