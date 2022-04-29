@@ -125,7 +125,7 @@ end
 transition EvolveHeroesCallback(token_uri: String, to: ByStr20, id_lv_max: Uint256, id_lv_any: Uint256)
   (* This call back must be invoked by the admins *)
   IsAdmin;
-  msg_one = {
+  (* msg_one = {
     _tag: "Burn";
     _recipient: token;
     _amount: Uint128 0;
@@ -136,7 +136,7 @@ transition EvolveHeroesCallback(token_uri: String, to: ByStr20, id_lv_max: Uint2
     _recipient: token;
     _amount: Uint128 0;
     token_id: id_lv_any
-  };
+  }; *)
   msg_three = {
     _tag: "Mint";
     _recipient: token;
@@ -144,7 +144,7 @@ transition EvolveHeroesCallback(token_uri: String, to: ByStr20, id_lv_max: Uint2
     to: to;
     token_uri: token_uri
   };
-  msgs = three_msgs msg_one msg_two msg_three;
+  msgs = one_msg msg_three;
   send msgs;
   e = {
     _eventname: "NFT Evolved";
@@ -164,4 +164,14 @@ transition AddAdmin(admin: ByStr20)
   | False =>
     admins[admin] := true
   end
+end
+
+transition ZRC6_MintCallback(to: ByStr20, token_id: Uint256, token_uri: String)
+  e = {
+    _eventname: "EvolveResultMint";
+    to: to;
+    token_id: token_id;
+    token_uri: token_uri
+  };
+  event e
 end

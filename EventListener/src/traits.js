@@ -193,19 +193,19 @@ function getSubStatsTypeAndNumber(number, gearType, level) {
         if (level === 5) {
             let rem = number % 7;
             if (rem === 0) {
-                sub_stats.push({type: "Set", value: "Life"});
+                sub_stats.push({type: "Life", value: "Set"});
             } else if (rem === 1) {
-                sub_stats.push({type: "Set", value: "Harden"});
+                sub_stats.push({type: "Harden", value: "Set"});
             } else if (rem === 2) {
-                sub_stats.push({type: "Set", value: "Strength"});
+                sub_stats.push({type: "Strength", value: "Set"});
             } else if (rem === 3) {
-                sub_stats.push({type: "Set", value: "Degenerate"});
+                sub_stats.push({type: "Degenerate", value: "Set"});
             } else if (rem === 4) {
-                sub_stats.push({type: "Set", value: "Effectiveness"});
+                sub_stats.push({type: "Effectiveness", value: "Set"});
             } else if (rem === 5) {
-                sub_stats.push({type: "Set", value: "Explosion"});
+                sub_stats.push({type: "Explosion", value: "Set"});
             } else {
-                sub_stats.push({type: "Set", value: "Vampire"});
+                sub_stats.push({type: "Vampire", value: "Set"});
             }
         }
         return sub_stats;

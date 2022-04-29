@@ -124,25 +124,25 @@ async function ListenForEvents() {
 
                 // Evolution Event Listener
                 if (eventObj["_eventname"] === "EvolveHeroes") {
-                    let max_token_uri = eventObj["params"][0]["value"];
-                    let any_token_uri = eventObj["params"][1]["value"];
-                    let to = eventObj["params"][2]["value"];
+                    let max_token_uri = eventObj["params"][0]["value"]["arguments"][0];
+                    let any_token_uri = eventObj["params"][1]["value"]["arguments"][0];
+                    let to = eventObj["params"][2]["value"]["arguments"][0];
                     let id_lv_max = eventObj["params"][3]["value"];
                     let id_lv_any = eventObj["params"][4]["value"];
                     await heroesEvolve(max_token_uri, any_token_uri, to, id_lv_max, id_lv_any);
                 }
                 if (eventObj["_eventname"] === "EvolveGears") {
-                    let max_token_uri = eventObj["params"][0]["value"];
-                    let any_token_uri = eventObj["params"][1]["value"];
-                    let to = eventObj["params"][2]["value"];
+                    let max_token_uri = eventObj["params"][0]["value"]["arguments"][0];
+                    let any_token_uri = eventObj["params"][1]["value"]["arguments"][0];
+                    let to = eventObj["params"][2]["value"]["arguments"][0];
                     let id_lv_max = eventObj["params"][3]["value"];
                     let id_lv_any = eventObj["params"][4]["value"];
                     await gearsEvolve(max_token_uri, any_token_uri, to, id_lv_max, id_lv_any);
                 }
                 if (eventObj["_eventname"] === "EvolveDLHeroes") {
-                    let max_token_uri = eventObj["params"][0]["value"];
-                    let any_token_uri = eventObj["params"][1]["value"];
-                    let to = eventObj["params"][2]["value"];
+                    let max_token_uri = eventObj["params"][0]["value"]["arguments"][0];
+                    let any_token_uri = eventObj["params"][1]["value"]["arguments"][0];
+                    let to = eventObj["params"][2]["value"]["arguments"][0];
                     let id_lv_max = eventObj["params"][3]["value"];
                     let id_lv_any = eventObj["params"][4]["value"];
                     await dlHeroesEvolve(max_token_uri, any_token_uri, to, id_lv_max, id_lv_any);
@@ -168,6 +168,7 @@ function getConfig(data) {
 
 // Evolve NFTs
 async function heroesEvolve(max_token_uri, any_token_uri, to, id_lv_max, id_lv_any) {
+    console.log("original token uri==========>", max_token_uri);
     let config = {
         method: 'get',
         url: `https://gateway.pinata.cloud/ipfs/${max_token_uri}`,
@@ -177,8 +178,9 @@ async function heroesEvolve(max_token_uri, any_token_uri, to, id_lv_max, id_lv_a
       .then(function (response) {
         let metadata = response.data;
         let rarity = metadata.rarity;
-        let newRarity = rarity ++ ;
+        let newRarity = rarity + 1 ;
         metadata.rarity = newRarity;
+        console.log("new metadata=============>", metadata);
         let data = JSON.stringify({
             "pinataMetadata": {
                 "name": `heroes-evolve-${heroesEvolveCount}.metadata.json`
@@ -186,31 +188,22 @@ async function heroesEvolve(max_token_uri, any_token_uri, to, id_lv_max, id_lv_a
             "pinataContent": metadata
         });
         let config = getConfig(data);
-        axios(config).then(async res => {
+        axios(config).
+        then(async res => {
             let IpfsHash = res.data["IpfsHash"];
-            const evolutionContract = zilliqa.contracts.at(process.env.HEROES_EVOLUTION_ADDRESS);
-            const callTx = await evolutionContract.callWithoutConfirm(
-                'EvolveHeroesCallback',
+            const heroesNFTContract = zilliqa.contracts.at(process.env.HEROES_NFT_ADDRESS);
+            const callTx = await heroesNFTContract.callWithoutConfirm(
+                'Mint',
                 [
-                    {
-                        vname: 'token_uri',
-                        type: 'String',
-                        value: IpfsHash,
-                    },
                     {
                         vname: 'to',
                         type: 'ByStr20',
                         value: to,
                     },
                     {
-                        vname: 'id_lv_max',
-                        type: 'Uint256',
-                        value: id_lv_max,
-                    },
-                    {
-                        vname: 'id_lv_any',
-                        type: 'Uint256',
-                        value: id_lv_any,
+                        vname: 'token_uri',
+                        type: 'String',
+                        value: IpfsHash,
                     }
                 ],
                 {
@@ -222,14 +215,14 @@ async function heroesEvolve(max_token_uri, any_token_uri, to, id_lv_max, id_lv_a
                 },
                 false,
             );
-            console.log("setting Random Number step 2===========>", callTx.id);
+            console.log("Evolving step 2===========>", callTx.id);
             const confirmedTxn = await callTx.confirm(callTx.id);
-            console.log("setting Random Number step 3===========>", confirmedTxn.receipt);
+            console.log("Evolving step 3===========>", confirmedTxn.receipt);
             if (confirmedTxn.receipt.success === true) {
-                console.log("==============Transaction is successful===============")
+                console.log("==============Transaction is successful===============", IpfsHash)
             }
         }).catch(e => {
-
+            console.log("======error from ipfs upload========")
         })
       })
       .catch(function (error) {
@@ -246,8 +239,28 @@ async function gearsEvolve(max_token_uri, any_token_uri, to, id_lv_max, id_lv_an
         .then(function (response) {
             let metadata = response.data;
             let rarity = metadata.rarity;
-            let newRarity = rarity ++ ;
+            let newRarity = rarity + 1 ;
             metadata.rarity = newRarity;
+            let sub_stats = metadata.sub_stats;
+            let new_sub_stats = [];
+            for (let substat of sub_stats) {
+                let type = substat.split(" ")[0];
+                let value = substat.split(" ")[1];
+                if  (value === "Set") {
+                    new_sub_stats.push(substat)
+                } else {
+                    if (type.indexOf("%") > -1) {
+                        value = parseFloat(value.substring(1));
+                        let newValue = (value * 1.1).toFixed(2);
+                        new_sub_stats.push(`${type} +${newValue}`);
+                    } else {
+                        value = parseInt(value.substring(1));
+                        let newValue = Math.floor(value * 1.1);
+                        new_sub_stats.push(`${type} +${newValue}`);
+                    }
+                }
+            }
+            metadata.sub_stats = new_sub_stats;
             let data = JSON.stringify({
                 "pinataMetadata": {
                     "name": `gears-evolve-${gearsEvolveCount}.metadata.json`
@@ -257,29 +270,19 @@ async function gearsEvolve(max_token_uri, any_token_uri, to, id_lv_max, id_lv_an
             let config = getConfig(data);
             axios(config).then(async res => {
                 let IpfsHash = res.data["IpfsHash"];
-                const evolutionContract = zilliqa.contracts.at(process.env.GEARS_EVOLUTION_ADDRESS);
-                const callTx = await evolutionContract.callWithoutConfirm(
-                    'EvolveGearsCallback',
+                const gearsNFTContract = zilliqa.contracts.at(process.env.GEARS_NFT_ADDRESS);
+                const callTx = await gearsNFTContract.callWithoutConfirm(
+                    'Mint',
                     [
-                        {
-                            vname: 'token_uri',
-                            type: 'String',
-                            value: IpfsHash,
-                        },
                         {
                             vname: 'to',
                             type: 'ByStr20',
                             value: to,
                         },
                         {
-                            vname: 'id_lv_max',
-                            type: 'Uint256',
-                            value: id_lv_max,
-                        },
-                        {
-                            vname: 'id_lv_any',
-                            type: 'Uint256',
-                            value: id_lv_any,
+                            vname: 'token_uri',
+                            type: 'String',
+                            value: IpfsHash,
                         }
                     ],
                     {
@@ -291,11 +294,11 @@ async function gearsEvolve(max_token_uri, any_token_uri, to, id_lv_max, id_lv_an
                     },
                     false,
                 );
-                console.log("setting Random Number step 2===========>", callTx.id);
+                console.log("Evolving Number step 2===========>", callTx.id);
                 const confirmedTxn = await callTx.confirm(callTx.id);
-                console.log("setting Random Number step 3===========>", confirmedTxn.receipt);
+                console.log("Evolving step 3===========>", confirmedTxn.receipt);
                 if (confirmedTxn.receipt.success === true) {
-                    console.log("==============Transaction is successful===============")
+                    console.log("==============Transaction is successful===============", IpfsHash)
                 }
             }).catch(e => {
 
@@ -315,7 +318,7 @@ async function dlHeroesEvolve(max_token_uri, any_token_uri, to, id_lv_max, id_lv
         .then(function (response) {
             let metadata = response.data;
             let rarity = metadata.rarity;
-            let newRarity = rarity ++ ;
+            let newRarity = rarity + 1 ;
             metadata.rarity = newRarity;
             let data = JSON.stringify({
                 "pinataMetadata": {
@@ -326,29 +329,19 @@ async function dlHeroesEvolve(max_token_uri, any_token_uri, to, id_lv_max, id_lv
             let config = getConfig(data);
             axios(config).then(async res => {
                 let IpfsHash = res.data["IpfsHash"];
-                const evolutionContract = zilliqa.contracts.at(process.env.DL_HEROES_EVOLUTION_ADDRESS);
-                const callTx = await evolutionContract.callWithoutConfirm(
-                    'EvolveHeroesCallback',
+                const dlHeroesNFTContract = zilliqa.contracts.at(process.env.DL_HEROES_NFT_ADDRESS);
+                const callTx = await dlHeroesNFTContract.callWithoutConfirm(
+                    'Mint',
                     [
-                        {
-                            vname: 'token_uri',
-                            type: 'String',
-                            value: IpfsHash,
-                        },
                         {
                             vname: 'to',
                             type: 'ByStr20',
                             value: to,
                         },
                         {
-                            vname: 'id_lv_max',
-                            type: 'Uint256',
-                            value: id_lv_max,
-                        },
-                        {
-                            vname: 'id_lv_any',
-                            type: 'Uint256',
-                            value: id_lv_any,
+                            vname: 'token_uri',
+                            type: 'String',
+                            value: IpfsHash,
                         }
                     ],
                     {
@@ -360,11 +353,11 @@ async function dlHeroesEvolve(max_token_uri, any_token_uri, to, id_lv_max, id_lv
                     },
                     false,
                 );
-                console.log("setting Random Number step 2===========>", callTx.id);
+                console.log("Evolving step 2===========>", callTx.id);
                 const confirmedTxn = await callTx.confirm(callTx.id);
-                console.log("setting Random Number step 3===========>", confirmedTxn.receipt);
+                console.log("Evolving step 3===========>", confirmedTxn.receipt);
                 if (confirmedTxn.receipt.success === true) {
-                    console.log("==============Transaction is successful===============")
+                    console.log("==============Transaction is successful===============", IpfsHash)
                 }
             }).catch(e => {
 
@@ -501,7 +494,12 @@ async function gearsSingleMint(token_id, is_high_level, to) {
     for (let substat of substats) {
         let type = substat["type"];
         let value = substat["value"];
-        let formattedParam = `${type} +${value}`;
+        let formattedParam = "";
+        if (value === "Set") {
+            formattedParam = `${type} ${value}`;
+        } else {
+            formattedParam = `${type} +${value}`;
+        }
         formattedSubstats.push(formattedParam);
     }
     let data = JSON.stringify({
