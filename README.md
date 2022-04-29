@@ -19,6 +19,7 @@ GEARS_EVOLUTION_ADDRESS=0x7efb34d49af48ac04cd5afdc5ba67466ec272cb0
 * Set Gas Price to 2000000000
 * Set Gas Limit to 40000
 * SetBaseURI to "ipfs://"
+
 ***
 4. Deploy Mint Contract
 ***
