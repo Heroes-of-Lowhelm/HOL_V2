@@ -39,65 +39,6 @@ let make_error =
         in
         { _exception : "Error"; code : result_code }
 
-let cons_one_param = 
-    fun (to: ByStr20) =>
-        let one_batch = Pair {(ByStr20) (String)} to empty_string in
-        let nil_batch = Nil {Pair ByStr20 String} in
-            Cons {Pair ByStr20 String} one_batch nil_batch
-
-let cons_two_param = 
-    fun (to: ByStr20) =>
-        let batch_tmp = cons_one_param to in
-        let one_batch = Pair {(ByStr20) (String)} to empty_string in
-            Cons {Pair ByStr20 String} batch_tmp one_batch
-
-let cons_three_param = 
-    fun (to: ByStr20) =>
-        let batch_tmp = cons_two_param to in
-        let one_batch = Pair {(ByStr20) (String)} to empty_string in
-            Cons {Pair ByStr20 String} batch_tmp one_batch
-
-let cons_four_param = 
-    fun (to: ByStr20) =>
-        let batch_tmp = cons_three_param to in
-        let one_batch = Pair {(ByStr20) (String)} to empty_string in
-            Cons {Pair ByStr20 String} batch_tmp one_batch
-
-let cons_five_param = 
-    fun (to: ByStr20) =>
-        let batch_tmp = cons_four_param to in
-        let one_batch = Pair {(ByStr20) (String)} to empty_string in
-            Cons {Pair ByStr20 String} batch_tmp one_batch
-
-let cons_six_param = 
-    fun (to: ByStr20) =>
-        let batch_tmp = cons_five_param to in
-        let one_batch = Pair {(ByStr20) (String)} to empty_string in
-            Cons {Pair ByStr20 String} batch_tmp one_batch
-
-let cons_seven_param = 
-    fun (to: ByStr20) =>
-        let batch_tmp = cons_six_param to in
-        let one_batch = Pair {(ByStr20) (String)} to empty_string in
-            Cons {Pair ByStr20 String} batch_tmp one_batch
-
-let cons_eight_param = 
-    fun (to: ByStr20) =>
-        let batch_tmp = cons_seven_param to in
-        let one_batch = Pair {(ByStr20) (String)} to empty_string in
-            Cons {Pair ByStr20 String} batch_tmp one_batch
-
-let cons_nine_param = 
-    fun (to: ByStr20) =>
-        let batch_tmp = cons_eight_param to in
-        let one_batch = Pair {(ByStr20) (String)} to empty_string in
-            Cons {Pair ByStr20 String} batch_tmp one_batch
-
-let cons_ten_param = 
-    fun (to: ByStr20) =>
-        let batch_tmp = cons_nine_param to in
-        let one_batch = Pair {(ByStr20) (String)} to empty_string in
-            Cons {Pair ByStr20 String} batch_tmp one_batch
 (***************************************************)
 (*             The contract definition             *)
 (***************************************************)
@@ -272,8 +213,6 @@ transition BatchMint13Heroes()
     start_id = builtin add current_heroes_id_count one;
     end_id = builtin add current_heroes_id_count ten;
     heroes_id_count := end_id;
-    (* const batch param *)
-    to_token_uri_pair_list = cons_ten_param _sender;
 
     e = {
         _eventname : "BatchMint13Heroes";
@@ -293,8 +232,6 @@ transition BatchMint13Gears()
     start_id = builtin add current_gears_id_count one;
     end_id = builtin add current_gears_id_count ten;
     gears_id_count := end_id;
-    (* const batch param *)
-    to_token_uri_pair_list = cons_ten_param _sender;
 
     e = {
         _eventname : "BatchMint13Gears";
@@ -314,8 +251,6 @@ transition BatchMint35Heroes()
     start_id = builtin add current_heroes_id_count one;
     end_id = builtin add current_heroes_id_count ten;
     heroes_id_count := end_id;
-    (* const batch param *)
-    to_token_uri_pair_list = cons_ten_param _sender;
 
     e = {
         _eventname : "BatchMint35Heroes";
@@ -335,8 +270,6 @@ transition BatchMint35Gears()
     start_id = builtin add current_gears_id_count one;
     end_id = builtin add current_gears_id_count ten;
     gears_id_count := end_id;
-    (* const batch param *)
-    to_token_uri_pair_list = cons_ten_param _sender;
 
     e = {
         _eventname : "BatchMint35Gears";
