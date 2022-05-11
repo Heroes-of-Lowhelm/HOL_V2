@@ -102,7 +102,7 @@ class App extends React.Component {
             (event) => {
                 console.log('get new event log: ', JSON.stringify(event));
                 if ("value" in event) {
-                    let eventObj = event["value"][0]["event_logs"][0];
+                    for (let eventObj of event["value"][0]["event_logs"]) {
                         if (eventObj["_eventname"] === "Mint13Heroes") {
                             this.setState({isLoadingH13Mint: false});
                         } else if (eventObj["_eventname"] === "Mint35Heroes") {
@@ -122,6 +122,8 @@ class App extends React.Component {
                         } else if (eventObj["_eventname"] === "BatchMint35Gears") {
                             this.setState({isLoadingG13BatchMint: false});
                         }
+                    }
+
                 }
             });
         // unsubscribed successfully
