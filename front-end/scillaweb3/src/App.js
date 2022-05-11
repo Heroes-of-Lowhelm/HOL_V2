@@ -9,7 +9,7 @@ const {BN, Long, units} = require('@zilliqa-js/util');
 const mintContractAddress = "0x3f81cc88109d7f27bb82ddb1eabf2d06b7d3655a";
 const heroesEvolutionContractAddress = "0x0a229a74b752f916b262422a08a1d9661c1334ce";
 const dlHeroesEvolutionContractAddress = "0x419e6d806a7d1d304c8f0213faf5dd07663de7eb";
-const gearsEvolutionContractAddress = "0x7c4a6ce9dd1e232f3a7bf1a2c710103d46bc73f6";
+const gearsEvolutionContractAddress = "0xa32ec48a1df1df911010e6d93e77685774056ef0";
 
 const {
     StatusType,
