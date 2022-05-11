@@ -3,7 +3,6 @@ import React from "react";
 import {Container, Row, Col} from 'react-grid-system';
 import ReactLoading from 'react-loading';
 
-
 const {Zilliqa} = require('@zilliqa-js/zilliqa');
 const {BN, Long, units} = require('@zilliqa-js/util');
 
@@ -32,6 +31,15 @@ class App extends React.Component {
             isLoadingH35BatchMint: false,
             isLoadingG13BatchMint: false,
             isLoadingG35BatchMint: false,
+            isLoadingHeroesEvolution: false,
+            isLoadingDLHeroesEvolution: false,
+            isLoadingGearsEvolution: false,
+            heroesEvMax: 0,
+            heroesEvAny: 0,
+            dlHeroesEvMax: 0,
+            dlHeroesEvAny: 0,
+            gearsEvMax: 0,
+            gearsEvAny: 0,
             document: "",
             walletConnected: false
         };
@@ -120,7 +128,7 @@ class App extends React.Component {
                         } else if (eventObj["_eventname"] === "BatchMint13Gears") {
                             this.setState({isLoadingG13BatchMint: false});
                         } else if (eventObj["_eventname"] === "BatchMint35Gears") {
-                            this.setState({isLoadingG13BatchMint: false});
+                            this.setState({isLoadingG35BatchMint: false});
                         }
                     }
 
@@ -154,6 +162,7 @@ class App extends React.Component {
             );
         } catch (err) {
             console.log(err);
+            this.setState({isLoadingH13Mint: false})
         }
     }
 
@@ -175,6 +184,7 @@ class App extends React.Component {
             );
         } catch (err) {
             console.log(err);
+            this.setState({isLoadingH35Mint: false})
         }
     }
 
@@ -196,6 +206,7 @@ class App extends React.Component {
             );
         } catch (err) {
             console.log(err);
+            this.setState({isLoadingHDLMint: false})
         }
     }
 
@@ -217,6 +228,7 @@ class App extends React.Component {
             );
         } catch (err) {
             console.log(err);
+            this.setState({isLoadingG13Mint: false})
         }
     }
 
@@ -238,6 +250,7 @@ class App extends React.Component {
             );
         } catch (err) {
             console.log(err);
+            this.setState({isLoadingG35Mint: false})
         }
     }
 
@@ -259,6 +272,7 @@ class App extends React.Component {
             );
         } catch (err) {
             console.log(err);
+            this.setState({isLoadingH13BatchMint: false})
         }
     }
 
@@ -280,6 +294,7 @@ class App extends React.Component {
             );
         } catch (err) {
             console.log(err);
+            this.setState({isLoadingH35BatchMint: false})
         }
     }
 
@@ -302,6 +317,7 @@ class App extends React.Component {
             );
         } catch (err) {
             console.log(err);
+            this.setState({isLoadingG13BatchMint: false})
         }
     }
 
@@ -323,6 +339,7 @@ class App extends React.Component {
             );
         } catch (err) {
             console.log(err);
+            this.setState({isLoadingG35BatchMint: false})
         }
     }
 
@@ -407,6 +424,69 @@ class App extends React.Component {
                                     <ReactLoading type={"balls"} color={'gray'}></ReactLoading> :
                                     <button id="btnNotarize" onClick={this.batchMint35Gears}>Batch Mint 3* ~ 5* Gears</button>
                             }
+                        </Col>
+                    </Row>
+                </Container> : <></>}
+
+                {this.state.walletConnected ? <Container>
+                    <Row>
+                        <Col sm={12}>
+                            <h2>Evolution Testing</h2>
+                        </Col>
+                        <Col sm={12} md={6} lg={4}>
+                            {
+                                this.state.isLoadingHeroesEvolution ?
+                                    <ReactLoading type={"balls"} color={'gray'}></ReactLoading> :
+                                    <button id="btnNotarize" onClick={this.mint13Heroes}>Evolve Heroes</button>
+                            }
+                        </Col>
+                        <Col sm={12} md={6} lg={4}>
+                            <div className={'oneLineFlex'}>
+                                <label style={{width: '100px'}}>MAX ID</label>
+                                <input type={'number'} value={this.state.heroesEvMax} onChange={e => this.setState({heroesEvMax: e.target.value})}></input>
+                            </div>
+                            <div className={'oneLineFlex'}>
+                                <label style={{width: '100px'}}>ANY ID</label>
+                                <input type={'number'} value={this.state.heroesEvAny} onChange={e => this.setState({heroesEvAny: e.target.value})}></input>
+                            </div>
+                        </Col>
+                    </Row>
+                    <Row>
+                        <Col sm={12} md={6} lg={4}>
+                            {
+                                this.state.isLoadingDLHeroesEvolution ?
+                                    <ReactLoading type={"balls"} color={'gray'}></ReactLoading> :
+                                    <button id="btnNotarize" onClick={this.mint35Heroes}>Evolve Dark/Light Heroes</button>
+                            }
+                        </Col>
+                        <Col sm={12} md={6} lg={4}>
+                            <div className={'oneLineFlex'}>
+                                <label style={{width: '100px'}}>MAX ID</label>
+                                <input type={'number'} value={this.state.dlHeroesEvMax} onChange={e => this.setState({dlHeroesEvMax: e.target.value})}></input>
+                            </div>
+                            <div className={'oneLineFlex'}>
+                                <label style={{width: '100px'}}>ANY ID</label>
+                                <input type={'number'} value={this.state.dlHeroesEvAny} onChange={e => this.setState({dlHeroesEvAny: e.target.value})}></input>
+                            </div>
+                        </Col>
+                    </Row>
+                    <Row>
+                        <Col sm={12} md={6} lg={4}>
+                            {
+                                this.state.isLoadingGearsEvolution ?
+                                    <ReactLoading type={"balls"} color={'gray'}></ReactLoading> :
+                                    <button id="btnNotarize" onClick={this.mintDLHeroes}>Evolve Gears</button>
+                            }
+                        </Col>
+                        <Col sm={12} md={6} lg={4}>
+                            <div className={'oneLineFlex'}>
+                                <label style={{width: '100px'}}>MAX ID</label>
+                                <input type={'number'} value={this.state.gearsEvMax} onChange={e => this.setState({gearsEvMax: e.target.value})}></input>
+                            </div>
+                            <div className={'oneLineFlex'}>
+                                <label style={{width: '100px'}}>ANY ID</label>
+                                <input type={'number'} value={this.state.gearsEvAny} onChange={e => this.setState({gearsEvAny: e.target.value})}></input>
+                            </div>
                         </Col>
                     </Row>
                 </Container> : <></>}
