@@ -7,9 +7,9 @@ const {Zilliqa} = require('@zilliqa-js/zilliqa');
 const {BN, Long, units} = require('@zilliqa-js/util');
 
 const mintContractAddress = "0x3f81cc88109d7f27bb82ddb1eabf2d06b7d3655a";
-const heroesEvolutionContractAddress = "0xb8dcbf278720cbb06a5b9205e42f138e6399d760";
-const dlHeroesEvolutionContractAddress = "0x6ddd290c07fc775093afad99a89295f60e982298";
-const gearsEvolutionContractAddress = "0x7efb34d49af48ac04cd5afdc5ba67466ec272cb0";
+const heroesEvolutionContractAddress = "0x0a229a74b752f916b262422a08a1d9661c1334ce";
+const dlHeroesEvolutionContractAddress = "0x419e6d806a7d1d304c8f0213faf5dd07663de7eb";
+const gearsEvolutionContractAddress = "0x7c4a6ce9dd1e232f3a7bf1a2c710103d46bc73f6";
 
 const {
     StatusType,
@@ -206,7 +206,8 @@ class App extends React.Component {
                 console.log('get new event log: ', JSON.stringify(event));
                 if ("value" in event) {
                     for (let eventObj of event["value"][0]["event_logs"]) {
-                        if (eventObj["_eventname"] === "NFT Evolved") {
+                        // if (eventObj["_eventname"] === "NFT Evolved") {
+                        if (eventObj["_eventname"] === "EvolveDLHeroes") {
                             this.setState({isLoadingDLHeroesEvolution: false});
                         }
                     }
@@ -242,7 +243,8 @@ class App extends React.Component {
                 console.log('get new event log: ', JSON.stringify(event));
                 if ("value" in event) {
                     for (let eventObj of event["value"][0]["event_logs"]) {
-                        if (eventObj["_eventname"] === "NFT Evolved") {
+                        // if (eventObj["_eventname"] === "NFT Evolved") {
+                        if (eventObj["_eventname"] === "EvolveGears") {
                             this.setState({isLoadingGearsEvolution: false});
                         }
                     }
