@@ -122,7 +122,7 @@ end
 
 transition EvolveGearsCallback(token_uri: String, to: ByStr20, id_lv_max: Uint256, id_lv_any: Uint256)
   (* This call back must be invoked by the NFT contract *)
-  IsAdmin;
+  (* IsAdmin; *)
   (* Burn old NFTs here *)
   (* msg_one = {
     _tag: "Burn";

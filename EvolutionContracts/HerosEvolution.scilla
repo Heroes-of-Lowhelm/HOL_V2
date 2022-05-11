@@ -103,7 +103,7 @@ procedure RequireContractOwner()
 end
 (* Transitions *)
 transition EvolveHeroes(id_lv_max: Uint256, id_lv_any: Uint256) 
-  IsAdmin;
+  (* IsAdmin; *)
   max_token_uri <- & token.token_uris[id_lv_max];
   any_token_uri <- & token.token_uris[id_lv_any];
   to <- & token.token_owners[id_lv_max];

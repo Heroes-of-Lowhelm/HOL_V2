@@ -7,6 +7,9 @@ const {Zilliqa} = require('@zilliqa-js/zilliqa');
 const {BN, Long, units} = require('@zilliqa-js/util');
 
 const mintContractAddress = "0x3f81cc88109d7f27bb82ddb1eabf2d06b7d3655a";
+const heroesEvolutionContractAddress = "0xb8dcbf278720cbb06a5b9205e42f138e6399d760";
+const dlHeroesEvolutionContractAddress = "0x6ddd290c07fc775093afad99a89295f60e982298";
+const gearsEvolutionContractAddress = "0x7efb34d49af48ac04cd5afdc5ba67466ec272cb0";
 
 const {
     StatusType,
@@ -83,6 +86,9 @@ class App extends React.Component {
             this.getCurrentAccount()
             this.setState({walletConnected: true})
             this.subscribeToEvents();
+            this.subscribeToHeroesEvolutionEvents();
+            this.subscribeToDLHeroesEvolutionEvents();
+            this.subscribeToGearsEvolutionEvents();
         } else {
             console.log("Cannot Find ZilPay")
             this.setState({walletConnected: false})
@@ -129,6 +135,115 @@ class App extends React.Component {
                             this.setState({isLoadingG13BatchMint: false});
                         } else if (eventObj["_eventname"] === "BatchMint35Gears") {
                             this.setState({isLoadingG35BatchMint: false});
+                        }
+                    }
+
+                }
+            });
+        // unsubscribed successfully
+        subscriber.emitter.on(MessageType.UNSUBSCRIBE, (event) => {
+            console.log('Unsubscribed: ', event);
+        });
+        subscriber.start();
+    }
+
+    subscribeToHeroesEvolutionEvents = () => {
+        // use https://api.zilliqa.com/ for Mainnet
+        const zilliqa = new Zilliqa('https://dev-api.zilliqa.com');
+        const subscriber =
+            zilliqa.subscriptionBuilder.buildEventLogSubscriptions(
+                'wss://dev-ws.zilliqa.com', // use wss://api-ws.zilliqa.com
+                // for Mainnet
+                {
+                    addresses: [heroesEvolutionContractAddress],
+                }
+            );
+        // subscribed successfully
+        subscriber.emitter.on(StatusType.SUBSCRIBE_EVENT_LOG,
+            (event) => {
+                console.log('Subscribed: ', event);
+            });
+        // fired when an event is received
+        subscriber.emitter.on(MessageType.EVENT_LOG,
+            (event) => {
+                console.log('get new event log: ', JSON.stringify(event));
+                if ("value" in event) {
+                    for (let eventObj of event["value"][0]["event_logs"]) {
+                        // if (eventObj["_eventname"] === "NFT Evolved") {
+                        if (eventObj["_eventname"] === "EvolveHeroes") {
+                            this.setState({isLoadingHeroesEvolution: false});
+                        }
+                    }
+
+                }
+            });
+        // unsubscribed successfully
+        subscriber.emitter.on(MessageType.UNSUBSCRIBE, (event) => {
+            console.log('Unsubscribed: ', event);
+        });
+        subscriber.start();
+    }
+
+    subscribeToDLHeroesEvolutionEvents = () => {
+        // use https://api.zilliqa.com/ for Mainnet
+        const zilliqa = new Zilliqa('https://dev-api.zilliqa.com');
+        const subscriber =
+            zilliqa.subscriptionBuilder.buildEventLogSubscriptions(
+                'wss://dev-ws.zilliqa.com', // use wss://api-ws.zilliqa.com
+                // for Mainnet
+                {
+                    addresses: [dlHeroesEvolutionContractAddress],
+                }
+            );
+        // subscribed successfully
+        subscriber.emitter.on(StatusType.SUBSCRIBE_EVENT_LOG,
+            (event) => {
+                console.log('Subscribed: ', event);
+            });
+        // fired when an event is received
+        subscriber.emitter.on(MessageType.EVENT_LOG,
+            (event) => {
+                console.log('get new event log: ', JSON.stringify(event));
+                if ("value" in event) {
+                    for (let eventObj of event["value"][0]["event_logs"]) {
+                        if (eventObj["_eventname"] === "NFT Evolved") {
+                            this.setState({isLoadingDLHeroesEvolution: false});
+                        }
+                    }
+
+                }
+            });
+        // unsubscribed successfully
+        subscriber.emitter.on(MessageType.UNSUBSCRIBE, (event) => {
+            console.log('Unsubscribed: ', event);
+        });
+        subscriber.start();
+    }
+
+    subscribeToGearsEvolutionEvents = () => {
+        // use https://api.zilliqa.com/ for Mainnet
+        const zilliqa = new Zilliqa('https://dev-api.zilliqa.com');
+        const subscriber =
+            zilliqa.subscriptionBuilder.buildEventLogSubscriptions(
+                'wss://dev-ws.zilliqa.com', // use wss://api-ws.zilliqa.com
+                // for Mainnet
+                {
+                    addresses: [gearsEvolutionContractAddress],
+                }
+            );
+        // subscribed successfully
+        subscriber.emitter.on(StatusType.SUBSCRIBE_EVENT_LOG,
+            (event) => {
+                console.log('Subscribed: ', event);
+            });
+        // fired when an event is received
+        subscriber.emitter.on(MessageType.EVENT_LOG,
+            (event) => {
+                console.log('get new event log: ', JSON.stringify(event));
+                if ("value" in event) {
+                    for (let eventObj of event["value"][0]["event_logs"]) {
+                        if (eventObj["_eventname"] === "NFT Evolved") {
+                            this.setState({isLoadingGearsEvolution: false});
                         }
                     }
 
@@ -342,7 +457,116 @@ class App extends React.Component {
             this.setState({isLoadingG35BatchMint: false})
         }
     }
+    handleHeroesEvolution = () => {
+        if (this.state.heroesEvMax === 0 || this.state.heroesEvAny === 0) {
+            alert("Please type correct IDs");
+            return;
+        }
+        this.setState({isLoadingHeroesEvolution: true})
+        const evolutionContract =
+            window.zilPay.contracts.at(heroesEvolutionContractAddress);
+        try {
+            evolutionContract.call(
+                'EvolveHeroes',
+                [
+                    {
+                        vname: 'id_lv_max',
+                        type: 'Uint256',
+                        value: this.state.heroesEvMax
+                    },
+                    {
+                        vname: 'id_lv_any',
+                        type: 'Uint256',
+                        value: this.state.heroesEvAny
+                    },
+                ],
+                {
+                    version: 21823489,   // For mainnet, it is 65537
+                                         // For testnet, it is 21823489
+                    amount: new BN(0),
+                    gasPrice: units.toQa('2000', units.Units.Li),
+                    gasLimit: Long.fromNumber(8000)
+                }
+            );
+        } catch (err) {
+            console.log(err);
+            this.setState({isLoadingHeroesEvolution: false})
+        }
+    }
 
+    handleDLHeroesEvolution = () => {
+        if (this.state.dlHeroesEvMax === 0 || this.state.dlHeroesEvAny === 0) {
+            alert("Please type correct IDs");
+            return;
+        }
+        this.setState({isLoadingDLHeroesEvolution: true})
+        const evolutionContract =
+            window.zilPay.contracts.at(dlHeroesEvolutionContractAddress);
+        try {
+            evolutionContract.call(
+                'EvolveHeroes',
+                [
+                    {
+                        vname: 'id_lv_max',
+                        type: 'Uint256',
+                        value: this.state.dlHeroesEvMax
+                    },
+                    {
+                        vname: 'id_lv_any',
+                        type: 'Uint256',
+                        value: this.state.dlHeroesEvAny
+                    },
+                ],
+                {
+                    version: 21823489,   // For mainnet, it is 65537
+                                         // For testnet, it is 21823489
+                    amount: new BN(0),
+                    gasPrice: units.toQa('2000', units.Units.Li),
+                    gasLimit: Long.fromNumber(8000)
+                }
+            );
+        } catch (err) {
+            console.log(err);
+            this.setState({isLoadingDLHeroesEvolution: false})
+        }
+    }
+
+    handleGearsEvolution = () => {
+        if (this.state.gearsEvMax === 0 || this.state.gearsEvAny === 0) {
+            alert("Please type correct IDs");
+            return;
+        }
+        this.setState({isLoadingGearsEvolution: true})
+        const evolutionContract =
+            window.zilPay.contracts.at(gearsEvolutionContractAddress);
+        try {
+            evolutionContract.call(
+                'EvolveGears',
+                [
+                    {
+                        vname: 'id_lv_max',
+                        type: 'Uint256',
+                        value: this.state.gearsEvMax
+                    },
+                    {
+                        vname: 'id_lv_any',
+                        type: 'Uint256',
+                        value: this.state.gearsEvAny
+                    },
+                ],
+                {
+                    version: 21823489,   // For mainnet, it is 65537
+                                         // For testnet, it is 21823489
+                    amount: new BN(0),
+                    gasPrice: units.toQa('2000', units.Units.Li),
+                    gasLimit: Long.fromNumber(8000)
+                }
+            );
+        } catch (err) {
+            console.log(err);
+            this.setState({isLoadingGearsEvolution: false})
+        }
+    }
 
     render() {
         return (
@@ -437,7 +661,7 @@ class App extends React.Component {
                             {
                                 this.state.isLoadingHeroesEvolution ?
                                     <ReactLoading type={"balls"} color={'gray'}></ReactLoading> :
-                                    <button id="btnNotarize" onClick={this.mint13Heroes}>Evolve Heroes</button>
+                                    <button id="btnNotarize" onClick={this.handleHeroesEvolution}>Evolve Heroes</button>
                             }
                         </Col>
                         <Col sm={12} md={6} lg={4}>
@@ -456,7 +680,7 @@ class App extends React.Component {
                             {
                                 this.state.isLoadingDLHeroesEvolution ?
                                     <ReactLoading type={"balls"} color={'gray'}></ReactLoading> :
-                                    <button id="btnNotarize" onClick={this.mint35Heroes}>Evolve Dark/Light Heroes</button>
+                                    <button id="btnNotarize" onClick={this.handleDLHeroesEvolution}>Evolve Dark/Light Heroes</button>
                             }
                         </Col>
                         <Col sm={12} md={6} lg={4}>
@@ -475,7 +699,7 @@ class App extends React.Component {
                             {
                                 this.state.isLoadingGearsEvolution ?
                                     <ReactLoading type={"balls"} color={'gray'}></ReactLoading> :
-                                    <button id="btnNotarize" onClick={this.mintDLHeroes}>Evolve Gears</button>
+                                    <button id="btnNotarize" onClick={this.handleGearsEvolution}>Evolve Gears</button>
                             }
                         </Col>
                         <Col sm={12} md={6} lg={4}>
