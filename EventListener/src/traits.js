@@ -265,15 +265,21 @@ module.exports = {
             let name = "";
             if (rem < 80) {
                 rarity = 3;
-                let rem_sub = random_number % 4;
+                let rem_sub = random_number % 7;
                 if (rem_sub === 0) {
                     name = "Shasta";
                 } else if (rem_sub === 1) {
                     name = "Calix";
                 } else if (rem_sub === 2) {
                     name = "Mia";
-                } else {
+                } else if (rem_sub === 3) {
                     name = "Gui-Ping";
+                } else if (rem_sub === 4) {
+                    name = "Iris"
+                } else if (rem_sub === 5) {
+                    name = "Seth"
+                } else {
+                    name = "Viktor"
                 }
             } else if (rem < 98) {
                 rarity = 4;
@@ -333,15 +339,21 @@ module.exports = {
                 }
             } else {
                 rarity = 3;
-                let rem_sub = random_number % 4;
+                let rem_sub = random_number % 7;
                 if (rem_sub === 0) {
                     name = "Shasta";
                 } else if (rem_sub === 1) {
                     name = "Calix";
                 } else if (rem_sub === 2) {
                     name = "Mia";
-                } else {
+                } else if (rem_sub === 3) {
                     name = "Gui-Ping";
+                } else if (rem_sub === 4) {
+                    name = "Iris"
+                } else if (rem_sub === 5) {
+                    name = "Seth"
+                } else {
+                    name = "Viktor"
                 }
             }
             return [name, rarity];
