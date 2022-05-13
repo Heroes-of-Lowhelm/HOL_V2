@@ -1,0 +1,310 @@
+(* SPDX-License-Identifier: MIT *)
+scilla_version 0
+
+(***************************************************)
+(*               Associated library                *)
+(***************************************************)
+import IntUtils ListUtils 
+
+library Staking
+let one = Uint256 1
+let zero = Uint128 0
+let ten = Uint256 10
+let true = True
+let false = False
+let empty_string = ""
+let one_msg = 
+    fun (msg : Message) => 
+        let nil_msg = Nil {Message} in
+        Cons {Message} msg nil_msg   
+
+(* Dummy user-defined ADT *)
+(* stakedAmount, unstakedAmount*)
+type Record = 
+| Record of Uint128 Uint128
+
+
+type Error =
+| CodeIsOwner
+| NotAdminError
+| CodeIsSameBlock
+| AmountExceedsTotalAmount
+
+let make_error =
+    fun (result : Error) =>
+        let result_code = 
+        match result with
+        | CodeIsOwner                => Int32 -1
+        | NotAdminError                => Int32 -2
+        | CodeIsSameBlock            => Int32 -3
+        | AmountExceedsTotalAmount => Int32 -4
+        end
+        in
+        { _exception : "Error"; code : result_code }
+
+(***************************************************)
+(*             The contract definition             *)
+(***************************************************)
+contract Staking 
+(
+    contract_owner: ByStr20,
+    reward_token: ByStr20 with contract field allowances: Map ByStr20 (Map ByStr20 Uint128)  end
+)
+
+(* Mutable fields *)
+(* Set for admins
+  contract_owner is the admin by default *)
+field admins: Map ByStr20 Bool = 
+  let emp_map = Emp ByStr20 Bool in
+  builtin put emp_map contract_owner true
+
+
+(* Mapping for caller Address to BlockNumber *)
+field caller_block_num: Map ByStr20 BNum = Emp ByStr20 BNum
+
+(* Mapping for user addresses to an User Record  *)
+field records: Map ByStr20 Record = Emp ByStr20 Record
+
+(* Mapping for user reward token address to user address to amount *)
+field reward_amounts: Map ByStr20 (Map ByStr20 Uint128) = Emp ByStr20 (Map ByStr20 Uint128)
+
+(* Total staked token amounts *)
+field total_staked_amount: Uint128 = zero
+(**************************************)
+(*             Procedures             *)
+(**************************************)
+
+procedure ThrowError(error: Error)
+    e = make_error error;
+    throw e
+end
+
+
+procedure IsSameBlock(blk: BNum)
+    last_blk <- caller_block_num[_sender];
+    match last_blk with
+    | Some v =>
+        is_allowed = builtin blt v blk;
+        match is_allowed with
+        | False =>
+            err = CodeIsSameBlock;
+            ThrowError err
+        | True =>
+        end
+    | None =>
+    end
+end
+
+
+procedure IsNotOwner(address: ByStr20)
+    is_owner = builtin eq contract_owner address;
+    match is_owner with
+    | False =>
+        err = CodeIsOwner;
+        ThrowError err
+    | True =>
+    end
+end
+
+(* Check is the address is admin or not *)
+procedure IsAdmin()
+  has_admin <- exists admins[_sender];
+  match has_admin with
+  | True =>
+  | False =>
+    error = NotAdminError;
+    ThrowError error
+  end
+end
+
+
+procedure ThrowInsufficientAllowanceException(
+    token : ByStr20,
+    expected : Uint128,
+    actual : Uint128)
+    e = { _exception : "InsufficientAllowance";
+         token: token;
+         expected : expected;
+         actual : actual };
+    throw e
+  end
+
+(* Check that the sender has allowed access to sufficient funds *)
+procedure CheckAllowance(
+    token : ByStr20 with contract field allowances : Map ByStr20 (Map ByStr20 Uint128) end,
+    expected : Uint128
+    )
+    actual_opt <-& token.allowances[_sender][_this_address];
+    (* Find actual allowance. Use 0 if None is given *)
+    actual = match actual_opt with
+             | Some x => x
+             | None => zero
+             end;
+    is_sufficient = uint128_le expected actual;
+    match is_sufficient with
+    | True => (* Nothing to do *)
+    | False =>
+      ThrowInsufficientAllowanceException token expected actual
+    end
+  end
+  
+(***************************************)
+(*             Transitions             *)
+(***************************************)
+
+transition Stake(amount: Uint128)
+    (* Check if this transition in the same block *)
+    blk <- & BLOCKNUMBER;
+    IsSameBlock blk;
+
+    (* Check allowance *)
+    CheckAllowance reward_token amount;
+
+    (* Transfer funds from the user account *)
+    msg = {
+        _tag: "TransferFrom";
+        _recipient: reward_token;
+        _amount: zero;
+        from: _sender;
+        to: _this_address;
+        amount: amount
+    };
+    msgs = one_msg msg;
+    send msgs;
+
+    (* Save records at this moment *)
+    total_staked_amount_tmp <- total_staked_amount;
+    current_staked_amount = builtin add total_staked_amount_tmp amount;
+    total_staked_amount := current_staked_amount;
+
+    record_tmp <- records[_sender];
+    match record_tmp with
+    | Some (Record staked_amount unstaked_amount) =>
+        new_staked_amount = builtin add staked_amount amount;
+        new_record = Record new_staked_amount unstaked_amount;
+        records[_sender] := new_record
+    | None =>
+        new_record = Record amount zero;
+        records[_sender] := new_record
+    end
+end
+
+transition Unstake(amount: Uint128)
+    (* Check if this transition in the same block *)
+    blk <- & BLOCKNUMBER;
+    IsSameBlock blk;
+    (* Check If the amount is not exceeding *)
+    record_tmp <- records[_sender];
+    match  record_tmp with
+    | Some (Record staked_amount unstaked_amount) =>
+        is_un_sufficient = builtin lt staked_amount amount;
+        match is_un_sufficient with
+        | True =>
+            err = AmountExceedsTotalAmount;
+            ThrowError err
+        | False =>
+            new_staked_amount = builtin sub staked_amount amount;
+            new_unstaked_amount = builtin add unstaked_amount amount;
+            new_record = Record new_staked_amount new_unstaked_amount;
+            records[_sender] := new_record
+        end
+    | None =>
+        err = AmountExceedsTotalAmount;
+        ThrowError err
+    end;
+
+     (* Save records at this moment *)
+     total_staked_amount_tmp <- total_staked_amount;
+     current_staked_amount = builtin sub total_staked_amount_tmp amount;
+     total_staked_amount := current_staked_amount
+end
+
+transition WithdrawUnstaked(amount: Uint128)
+    (* Check if this transition in the same block *)
+    blk <- & BLOCKNUMBER;
+    IsSameBlock blk;
+    (* Check If the amount is not exceeding *)
+    record_tmp <- records[_sender];
+    match  record_tmp with
+    | Some (Record staked_amount unstaked_amount) =>
+        is_un_sufficient = builtin lt unstaked_amount amount;
+        match is_un_sufficient with
+        | True =>
+            err = AmountExceedsTotalAmount;
+            ThrowError err
+        | False =>
+            new_unstaked_amount = builtin sub unstaked_amount amount;
+            new_record = Record staked_amount new_unstaked_amount;
+            records[_sender] := new_record
+        end
+    | None =>
+        err = AmountExceedsTotalAmount;
+        ThrowError err
+    end;
+
+    (* Transfer funds to the user account *)
+    msg = {
+        _tag: "Transfer";
+        _recipient: reward_token;
+        _amount: zero;
+        to: _sender;
+        amount: amount
+    };
+    msgs = one_msg msg;
+    send msgs
+end
+
+transition WithdrawRewards(token_addr: ByStr20, amount: Uint128)
+    (* Check if this transition in the same block *)
+    blk <- & BLOCKNUMBER;
+    IsSameBlock blk;
+    total_reward_amount <- reward_amounts[token_addr][_sender];
+    match total_reward_amount with
+    | Some value =>
+        is_un_sufficient = builtin lt value amount;
+        match is_un_sufficient with
+        | True =>
+            err = AmountExceedsTotalAmount;
+            ThrowError err
+        | False =>
+            new_reward_amount = builtin sub value amount;
+            reward_amounts[token_addr][_sender] := new_reward_amount;
+            (* Transfer funds to the user account *)
+            msg = {
+                _tag: "Transfer";
+                _recipient: token_addr;
+                _amount: zero;
+                to: _sender;
+                amount: amount
+            };
+            msgs = one_msg msg;
+            send msgs
+        end
+    | None =>
+        err = AmountExceedsTotalAmount;
+        ThrowError err
+    end
+end
+
+transition DepositDistribution(token_addr: ByStr20 with contract field allowances : Map ByStr20 (Map ByStr20 Uint128) end , amount: Uint128)
+    (* Check if this transition in the same block *)
+    blk <- & BLOCKNUMBER;
+    IsSameBlock blk;
+    (* Only admin can deposit distribution *)
+    IsAdmin;
+    
+    (* Check allowance *)
+    CheckAllowance token_addr amount;
+
+    (* Transfer funds from the user account *)
+    msg = {
+        _tag: "TransferFrom";
+        _recipient: token_addr;
+        _amount: zero;
+        from: _sender;
+        to: _this_address;
+        amount: amount
+    };
+    msgs = one_msg msg;
+    send msgs;
+end

@@ -145,7 +145,112 @@ transition EvolveGearsCallback(token_uri: String, to: ByStr20, id_lv_max: Uint25
   };
   msgs = one_msg msg_three;
   send msgs;
-  e = {
+  e = {(* SPDX-License-Identifier: MIT *)
+    scilla_version 0
+    
+    (***************************************************)
+    (*               Associated library                *)
+    (***************************************************)
+    import IntUtils ListUtils 
+    
+    library Staking
+    let one = Uint256 1
+    let zero = Uint128 0
+    let ten = Uint256 10
+    let true = True
+    let false = False
+    let empty_string = ""
+    let one_msg = 
+        fun (msg : Message) => 
+            let nil_msg = Nil {Message} in
+            Cons {Message} msg nil_msg   
+    
+    (* Dummy user-defined ADT *)
+    (* stakedAmount, unstakedAmount, rewardAmount *)
+    type Record = 
+    | Record of Uint256 Uint256 Uint256
+    
+    
+    type Error =
+    | CodeIsOwner
+    | CodeIsSameBlock
+    | CodeIsHeroesNotSet
+    | CodeIsDlHeroesNotSet
+    | CodeIsGearsNotSet
+    
+    let make_error =
+        fun (result : Error) =>
+            let result_code = 
+            match result with
+            | CodeIsOwner                => Int32 -1
+            | CodeIsSameBlock            => Int32 -2
+            | CodeIsHeroesNotSet         => Int32 -3 
+            | CodeIsDlHeroesNotSet       => Int32 -4
+            | CodeIsGearsNotSet          => Int32 -5
+            end
+            in
+            { _exception : "Error"; code : result_code }
+    
+    (***************************************************)
+    (*             The contract definition             *)
+    (***************************************************)
+    contract Staking 
+    (
+        contract_owner: ByStr20,
+        reward_token: ByStr20 with contract field balances: Map ByStr20 Uint128 end
+    )
+    
+    (* Mutable fields *)
+    field oracleAddress: Option ByStr20 = None {ByStr20}
+    
+    
+    (* Mapping for caller Address to BlockNumber *)
+    field caller_block_num: Map ByStr20 BNum = Emp ByStr20 BNum
+    
+    (* Mapping for token address to yse addresses to an User Record  *)
+    field records: Map ByStr20 (Map ByStr20 Record) = Emp ByStr20 (Map ByStr20 Record)
+    (**************************************)
+    (*             Procedures             *)
+    (**************************************)
+    
+    procedure ThrowError(error: Error)
+        e = make_error error;
+        throw e
+    end
+    
+    
+    procedure IsSameBlock(blk: BNum)
+        last_blk <- caller_block_num[_sender];
+        match last_blk with
+        | Some v =>
+            is_allowed = builtin blt v blk;
+            match is_allowed with
+            | False =>
+                err = CodeIsSameBlock;
+                ThrowError err
+            | True =>
+            end
+        | None =>
+        end
+    end
+    
+    
+    procedure IsNotOwner(address: ByStr20)
+        is_owner = builtin eq contract_owner address;
+        match is_owner with
+        | False =>
+            err = CodeIsOwner;
+            ThrowError err
+        | True =>
+        end
+    end
+    
+    (***************************************)
+    (*             Transitions             *)
+    (***************************************)
+    
+    
+    
     _eventname: "NFT Evolved";
     id_lv_max: id_lv_max;
     id_lv_any: id_lv_any
