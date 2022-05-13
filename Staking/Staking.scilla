@@ -356,3 +356,11 @@ transition DepositDistribution(token_addr: ByStr20 with contract field allowance
     token_user_pair = cons_all_user_token_pair token_addr amount records_list;
     forall token_user_pair CalculateReward
 end
+
+transition RecipientAcceptTransferFrom(initiator: ByStr20, sender: ByStr20, recipient: ByStr20, amount: Uint128)
+
+end
+
+transition RecipientAcceptTransfer(sender: ByStr20, recipient: ByStr20, amount: Uint128)
+
+end
