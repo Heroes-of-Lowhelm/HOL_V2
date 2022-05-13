@@ -9,6 +9,8 @@ import IntUtils ListUtils
 library Staking
 let one = Uint256 1
 let zero = Uint128 0
+let hundred = Uint128 100
+let uint128_10_power_9 = Uint128 1000000000
 let ten = Uint256 10
 let true = True
 let false = False
@@ -23,6 +25,8 @@ let one_msg =
 type Record = 
 | Record of Uint128 Uint128
 
+type UserTokenType =
+| UserTokenType of ByStr20 ByStr20 Uint128
 
 type Error =
 | CodeIsOwner
@@ -42,6 +46,22 @@ let make_error =
         in
         { _exception : "Error"; code : result_code }
 
+let cons_user_token_pair = 
+    fun (token_addr: ByStr20) =>
+    fun (amount: Uint128) =>
+    fun (user_pair: Pair ByStr20 Record) =>
+        match user_pair with
+        | Pair user_addr record =>
+            UserTokenType user_addr token_addr amount
+        end
+
+let cons_all_user_token_pair = 
+    fun (token_addr: ByStr20) =>
+    fun (amount: Uint128) =>
+    fun (user_pair_list: List (Pair ByStr20 Record)) =>
+        let f = cons_user_token_pair token_addr amount in
+        let list_pair_usertoken = @list_map (Pair ByStr20 Record) UserTokenType in
+        list_pair_usertoken f user_pair_list
 (***************************************************)
 (*             The contract definition             *)
 (***************************************************)
@@ -70,6 +90,7 @@ field reward_amounts: Map ByStr20 (Map ByStr20 Uint128) = Emp ByStr20 (Map ByStr
 
 (* Total staked token amounts *)
 field total_staked_amount: Uint128 = zero
+
 (**************************************)
 (*             Procedures             *)
 (**************************************)
@@ -147,7 +168,30 @@ procedure CheckAllowance(
       ThrowInsufficientAllowanceException token expected actual
     end
   end
-  
+
+procedure CalculateReward (user_token_pair: UserTokenType)
+    match user_token_pair with
+    | UserTokenType user_addr token_addr amount => 
+        total_staked <- total_staked_amount;
+        user_record <- records[user_addr];
+        match user_record with
+        | Some (Record staked_amount unstaked_amount) =>
+            poolsharetmp = builtin mul staked_amount uint128_10_power_9;
+            poolshare = builtin div poolsharetmp total_staked;
+            reward_amount = builtin mul poolshare amount;
+            reward_amount_tmp <- reward_amounts[token_addr][user_addr];
+            match reward_amount_tmp with
+            | Some value =>
+                new_reward_amount = builtin add value reward_amount;
+                reward_amounts[token_addr][user_addr] := new_reward_amount
+            | None =>
+                reward_amounts[token_addr][user_addr] := reward_amount
+            end
+        | None =>
+        (* This case is user didn't stake yet *)
+        end
+    end
+end
 (***************************************)
 (*             Transitions             *)
 (***************************************)
@@ -307,4 +351,8 @@ transition DepositDistribution(token_addr: ByStr20 with contract field allowance
     };
     msgs = one_msg msg;
     send msgs;
+    records_tmp <- records;
+    records_list = builtin to_list records_tmp;
+    token_user_pair = cons_all_user_token_pair token_addr amount records_list;
+    forall token_user_pair CalculateReward
 end
