@@ -357,7 +357,15 @@ transition DepositDistribution(token_addr: ByStr20 with contract field allowance
     forall token_user_pair CalculateReward
 end
 
+transition TransferFromSuccessCallBack(initiator: ByStr20, sender: ByStr20, recipient: ByStr20, amount: Uint128)
+
+end
+
 transition RecipientAcceptTransferFrom(initiator: ByStr20, sender: ByStr20, recipient: ByStr20, amount: Uint128)
+
+end
+
+transition TransferSuccessCallBack(sender: ByStr20, recipient: ByStr20, amount: Uint128)
 
 end
 

@@ -30,3 +30,7 @@ GEARS_EVOLUTION_ADDRESS=0xa32ec48a1df1df911010e6d93e77685774056ef0
 * token address is required when deploy all of them, set each NFT's contract address
 
 ***
+
+# Important stuffs while integrating with app
+1. To stake/deposit funds to the staking contract, the app should call "IncreaseAllowance" transition of the Token contract ($HOL or $CAST).
+2. The reward amount in the staking contract is the value which is multiplied 10^9 to avoid float numbers on the blockchain side, so the app should calculate the reward by division of 10^9.
