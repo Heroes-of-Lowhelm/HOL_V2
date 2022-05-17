@@ -117,23 +117,24 @@ class App extends React.Component {
                 console.log('get new event log: ', JSON.stringify(event));
                 if ("value" in event) {
                     for (let eventObj of event["value"][0]["event_logs"]) {
-                        if (eventObj["_eventname"] === "Mint13Heroes") {
+                        console.log("TO ACCOUNT==========>", eventObj["params"][1]["value"]);
+                        if (eventObj["_eventname"] === "Mint13Heroes" && eventObj["params"][1]["value"].toLowerCase() === this.state.account.toLowerCase()) {
                             this.setState({isLoadingH13Mint: false});
-                        } else if (eventObj["_eventname"] === "Mint35Heroes") {
+                        } else if (eventObj["_eventname"] === "Mint35Heroes" && eventObj["params"][1]["value"].toLowerCase() === this.state.account.toLowerCase()) {
                             this.setState({isLoadingH35Mint: false});
-                        } else if (eventObj["_eventname"] === "MintDLHeroes") {
+                        } else if (eventObj["_eventname"] === "MintDLHeroes" && eventObj["params"][1]["value"].toLowerCase() === this.state.account.toLowerCase()) {
                             this.setState({isLoadingHDLMint: false});
-                        } else if (eventObj["_eventname"] === "Mint13Gears") {
+                        } else if (eventObj["_eventname"] === "Mint13Gears" && eventObj["params"][1]["value"].toLowerCase() === this.state.account.toLowerCase()) {
                             this.setState({isLoadingG13Mint: false});
-                        } else if (eventObj["_eventname"] === "Mint35Gears") {
+                        } else if (eventObj["_eventname"] === "Mint35Gears" && eventObj["params"][1]["value"].toLowerCase() === this.state.account.toLowerCase()) {
                             this.setState({isLoadingG35Mint: false});
-                        } else if (eventObj["_eventname"] === "BatchMint13Heroes") {
+                        } else if (eventObj["_eventname"] === "BatchMint13Heroes" && eventObj["params"][1]["value"].toLowerCase() === this.state.account.toLowerCase()) {
                             this.setState({isLoadingH13BatchMint: false});
-                        } else if (eventObj["_eventname"] === "BatchMint35Heroes") {
+                        } else if (eventObj["_eventname"] === "BatchMint35Heroes" && eventObj["params"][1]["value"].toLowerCase() === this.state.account.toLowerCase()) {
                             this.setState({isLoadingH35BatchMint: false});
-                        } else if (eventObj["_eventname"] === "BatchMint13Gears") {
+                        } else if (eventObj["_eventname"] === "BatchMint13Gears" && eventObj["params"][1]["value"].toLowerCase() === this.state.account.toLowerCase()) {
                             this.setState({isLoadingG13BatchMint: false});
-                        } else if (eventObj["_eventname"] === "BatchMint35Gears") {
+                        } else if (eventObj["_eventname"] === "BatchMint35Gears" && eventObj["params"][1]["value"].toLowerCase() === this.state.account.toLowerCase()) {
                             this.setState({isLoadingG35BatchMint: false});
                         }
                     }
