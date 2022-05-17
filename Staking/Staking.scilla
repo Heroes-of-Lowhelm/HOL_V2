@@ -178,7 +178,8 @@ procedure CalculateReward (user_token_pair: UserTokenType)
         | Some (Record staked_amount unstaked_amount) =>
             poolsharetmp = builtin mul staked_amount uint128_10_power_9;
             poolshare = builtin div poolsharetmp total_staked;
-            reward_amount = builtin mul poolshare amount;
+            reward_amount_mul = builtin mul poolshare amount;
+            reward_amount = builtin div reward_amount_mul uint128_10_power_9;
             reward_amount_tmp <- reward_amounts[token_addr][user_addr];
             match reward_amount_tmp with
             | Some value =>
