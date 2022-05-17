@@ -311,7 +311,7 @@ transition WithdrawUnstaked(amount: Uint128)
         _eventname: "WithdrawUnstakedSuccess";
         from: _sender
     };
-    event e;
+    event e
 end
 
 transition WithdrawRewards(token_addr: ByStr20, amount: Uint128)
@@ -343,7 +343,7 @@ transition WithdrawRewards(token_addr: ByStr20, amount: Uint128)
                 _eventname: "WithdrawRewardsSuccess";
                 from: _sender
             };
-            event e;
+            event e
         end
     | None =>
         err = AmountExceedsTotalAmount;
@@ -380,7 +380,7 @@ transition DepositDistribution(token_addr: ByStr20 with contract field allowance
         _eventname: "DepositSuccess";
         from: _sender
     };
-    event e;
+    event e
 end
 
 transition TransferFromSuccessCallBack(initiator: ByStr20, sender: ByStr20, recipient: ByStr20, amount: Uint128)
