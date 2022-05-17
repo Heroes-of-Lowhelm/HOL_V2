@@ -25,6 +25,7 @@ class App extends React.Component {
         // init the state variables
 
         this.state = {
+            account: "",
             isLoadingH13Mint: false,
             isLoadingH35Mint: false,
             isLoadingHDLMint: false,
@@ -43,8 +44,7 @@ class App extends React.Component {
             dlHeroesEvAny: 0,
             gearsEvMax: 0,
             gearsEvAny: 0,
-            document: "",
-            walletConnected: false
+            document: ""
         };
 
     }
@@ -53,6 +53,7 @@ class App extends React.Component {
     //* Get the current account in ZilPay *
     //-------------------------------------
     getCurrentAccount = () => {
+        let that = this;
         window.zilPay.wallet.connect()
             .then(
                 function (connected) {
@@ -69,6 +70,7 @@ class App extends React.Component {
                         function (account) {
                             console.log("Account has been changed to " +
                                 account.base16 + " (" + account.bech32 + ")");
+                            that.setState({account: account.base16})
                             window.zilPay.blockchain.getBalance(account.bech32)
                                 .then(function (resp) {
                                     console.log(resp);
@@ -84,14 +86,12 @@ class App extends React.Component {
         if (window.zilPay) {
             console.log("ZilPay Present")
             this.getCurrentAccount()
-            this.setState({walletConnected: true})
             this.subscribeToEvents();
             this.subscribeToHeroesEvolutionEvents();
             this.subscribeToDLHeroesEvolutionEvents();
             this.subscribeToGearsEvolutionEvents();
         } else {
             console.log("Cannot Find ZilPay")
-            this.setState({walletConnected: false})
         }
     }
 
@@ -575,10 +575,10 @@ class App extends React.Component {
             <div className="container">
                 <div className="headerContainer">
                     <h1>Test Mint/Evolve of HOL</h1>
-                    {!this.state.walletConnected ?
+                    {this.state.account === "" ?
                         <button id="btnConnectZilPay" onClick={this.connectZilPay}>Connect ZilPay</button> : <></>}
                 </div>
-                {this.state.walletConnected ? <Container>
+                {this.state.account !== "" ? <Container>
                     <Row>
                         <Col sm={12}>
                             <h2>Mint Testing</h2>
@@ -654,7 +654,7 @@ class App extends React.Component {
                     </Row>
                 </Container> : <></>}
 
-                {this.state.walletConnected ? <Container>
+                {this.state.account !== "" ? <Container>
                     <Row>
                         <Col sm={12}>
                             <h2>Evolution Testing</h2>
@@ -714,6 +714,9 @@ class App extends React.Component {
                                 <input type={'number'} value={this.state.gearsEvAny} onChange={e => this.setState({gearsEvAny: e.target.value})}></input>
                             </div>
                         </Col>
+                    </Row>
+                    <Row>
+
                     </Row>
                 </Container> : <></>}
             </div>
