@@ -829,7 +829,7 @@ class App extends React.Component {
                         </Col>
                     </Row>
                 </Container> : <></>}
-                {this.state.account !== "" ? <Container>
+              {/*  {this.state.account !== "" ? <Container>
                     <Row>
                         <Col sm={12}>
                             <h2>Staking</h2>
@@ -870,7 +870,7 @@ class App extends React.Component {
                             }
                         </Col>
                     </Row>
-                </Container> : <></>}
+                </Container> : <></>}*/}
             </div>
         );
     }
