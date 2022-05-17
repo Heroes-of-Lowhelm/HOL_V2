@@ -216,6 +216,12 @@ transition Stake(amount: Uint128)
     msgs = one_msg msg;
     send msgs;
 
+    e = {
+        _eventname: "StakeSuccess";
+        from: _sender
+    };
+    event e;
+
     (* Save records at this moment *)
     total_staked_amount_tmp <- total_staked_amount;
     current_staked_amount = builtin add total_staked_amount_tmp amount;
@@ -257,6 +263,11 @@ transition Unstake(amount: Uint128)
         ThrowError err
     end;
 
+    e = {
+        _eventname: "UnstakeSuccess";
+        from: _sender
+    };
+    event e;
      (* Save records at this moment *)
      total_staked_amount_tmp <- total_staked_amount;
      current_staked_amount = builtin sub total_staked_amount_tmp amount;
@@ -295,7 +306,12 @@ transition WithdrawUnstaked(amount: Uint128)
         amount: amount
     };
     msgs = one_msg msg;
-    send msgs
+    send msgs;
+    e = {
+        _eventname: "WithdrawUnstakedSuccess";
+        from: _sender
+    };
+    event e;
 end
 
 transition WithdrawRewards(token_addr: ByStr20, amount: Uint128)
@@ -322,7 +338,12 @@ transition WithdrawRewards(token_addr: ByStr20, amount: Uint128)
                 amount: amount
             };
             msgs = one_msg msg;
-            send msgs
+            send msgs;
+            e = {
+                _eventname: "WithdrawRewardsSuccess";
+                from: _sender
+            };
+            event e;
         end
     | None =>
         err = AmountExceedsTotalAmount;
@@ -354,7 +375,12 @@ transition DepositDistribution(token_addr: ByStr20 with contract field allowance
     records_tmp <- records;
     records_list = builtin to_list records_tmp;
     token_user_pair = cons_all_user_token_pair token_addr amount records_list;
-    forall token_user_pair CalculateReward
+    forall token_user_pair CalculateReward;
+    e = {
+        _eventname: "DepositSuccess";
+        from: _sender
+    };
+    event e;
 end
 
 transition TransferFromSuccessCallBack(initiator: ByStr20, sender: ByStr20, recipient: ByStr20, amount: Uint128)

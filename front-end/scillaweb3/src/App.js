@@ -10,6 +10,9 @@ const mintContractAddress = "0x3f81cc88109d7f27bb82ddb1eabf2d06b7d3655a";
 const heroesEvolutionContractAddress = "0x0a229a74b752f916b262422a08a1d9661c1334ce";
 const dlHeroesEvolutionContractAddress = "0x419e6d806a7d1d304c8f0213faf5dd07663de7eb";
 const gearsEvolutionContractAddress = "0xa32ec48a1df1df911010e6d93e77685774056ef0";
+const HOLAddress = "0x516fe17db252d6de4ed8f3e3c19f5418cba75c3b";
+const CASTAddress = "0xcdd65171b5ec8aa1bb8b13bd1a0c9ae0b6787a21";
+const StakingAddress = "0x7d24d901f519a84182412b6fb38a9eb26a3a476d";
 
 const {
     StatusType,
@@ -38,13 +41,15 @@ class App extends React.Component {
             isLoadingHeroesEvolution: false,
             isLoadingDLHeroesEvolution: false,
             isLoadingGearsEvolution: false,
+            isLoadingStake: false,
             heroesEvMax: 0,
             heroesEvAny: 0,
             dlHeroesEvMax: 0,
             dlHeroesEvAny: 0,
             gearsEvMax: 0,
             gearsEvAny: 0,
-            document: ""
+            document: "",
+            stakeAmount: 10
         };
 
     }
@@ -247,6 +252,43 @@ class App extends React.Component {
                         // if (eventObj["_eventname"] === "NFT Evolved") {
                         if (eventObj["_eventname"] === "EvolveGears") {
                             this.setState({isLoadingGearsEvolution: false});
+                        }
+                    }
+
+                }
+            });
+        // unsubscribed successfully
+        subscriber.emitter.on(MessageType.UNSUBSCRIBE, (event) => {
+            console.log('Unsubscribed: ', event);
+        });
+        subscriber.start();
+    }
+
+    subscribeToIncreaseAllowanceEvents = () => {
+        // use https://api.zilliqa.com/ for Mainnet
+        const zilliqa = new Zilliqa('https://dev-api.zilliqa.com');
+        const subscriber =
+            zilliqa.subscriptionBuilder.buildEventLogSubscriptions(
+                'wss://dev-ws.zilliqa.com', // use wss://api-ws.zilliqa.com
+                // for Mainnet
+                {
+                    addresses: [HOLAddress],
+                }
+            );
+        // subscribed successfully
+        subscriber.emitter.on(StatusType.SUBSCRIBE_EVENT_LOG,
+            (event) => {
+                console.log('Subscribed: ', event);
+            });
+        // fired when an event is received
+        subscriber.emitter.on(MessageType.EVENT_LOG,
+            (event) => {
+                console.log('get new event log: ', JSON.stringify(event));
+                if ("value" in event) {
+                    for (let eventObj of event["value"][0]["event_logs"]) {
+                        if (eventObj["_eventname"] === "IncreasedAllowance" && eventObj["params"][0]["value"].toLowerCase() === this.state.account.toLowerCase()) {
+                            this.stakeHol();
+                            subscriber.stop();
                         }
                     }
 
@@ -570,12 +612,82 @@ class App extends React.Component {
             this.setState({isLoadingGearsEvolution: false})
         }
     }
+    increaseAllowance = () => {
+        const holContractAddress = window.zilPay.contracts.at(HOLAddress);
+        try {
+            holContractAddress.call(
+                'IncreaseAllowance',
+                [
+                    {
+                        vname: 'spender',
+                        type: 'ByStr20',
+                        value: StakingAddress
+                    },
+                    {
+                        vname: 'amount',
+                        type: 'Uint128',
+                        value: this.state.stakeAmount
+                    }
+                ],
+                {
+                    version: 21823489,   // For mainnet, it is 65537
+                                         // For testnet, it is 21823489
+                    amount: new BN(0),
+                    gasPrice: units.toQa('2000', units.Units.Li),
+                    gasLimit: Long.fromNumber(8000)
+                }
+            )
+        } catch (e) {
+            console.log(e);
+        }
+    }
+    stakeHol = () => {
+        const stakingAddress = window.zilPay.contracts.at(StakingAddress);
+        try {
+            stakingAddress.call(
+                'Stake',
+                [
+                    {
+                        vname: 'amount',
+                        type: 'Uint128',
+                        value: this.state.stakeAmount
+                    }
+                ],
+                {
+                    version: 21823489,   // For mainnet, it is 65537
+                                         // For testnet, it is 21823489
+                    amount: new BN(0),
+                    gasPrice: units.toQa('2000', units.Units.Li),
+                    gasLimit: Long.fromNumber(8000)
+                }
+            )
+        } catch (e) {
+            console.log(e);
+        }
+    }
+    stake = () => {
+        this.setState({isLoadingStake: true});
+        this.increaseAllowance();
+        this.subscribeToIncreaseAllowanceEvents();
+    }
+    unstake = () => {
+
+    }
+    withdrawUnstake = () => {
+
+    }
+    claimRewards = () => {
+
+    }
+    depositDist = () => {
+
+    }
 
     render() {
         return (
             <div className="container">
                 <div className="headerContainer">
-                    <h1>Test Mint/Evolve of HOL</h1>
+                    <h1>Test Mint/Evolve/Stake of HOL</h1>
                     {this.state.account === "" ?
                         <button id="btnConnectZilPay" onClick={this.connectZilPay}>Connect ZilPay</button> : <></>}
                 </div>
@@ -716,8 +828,47 @@ class App extends React.Component {
                             </div>
                         </Col>
                     </Row>
+                </Container> : <></>}
+                {this.state.account !== "" ? <Container>
                     <Row>
-
+                        <Col sm={12}>
+                            <h2>Staking</h2>
+                        </Col>
+                        <Col sm={12} md={6} lg={4}>
+                            {
+                                this.state.isLoadingH13Mint ?
+                                    <ReactLoading type={"balls"} color={'gray'}></ReactLoading> :
+                                    <button id="btnNotarize" onClick={this.stake}>Stake</button>
+                            }
+                        </Col>
+                        <Col sm={12} md={6} lg={4}>
+                            {
+                                this.state.isLoadingH35Mint ?
+                                    <ReactLoading type={"balls"} color={'gray'}></ReactLoading> :
+                                    <button id="btnNotarize" onClick={this.unstake}>Unstake</button>
+                            }
+                        </Col>
+                        <Col sm={12} md={6} lg={4}>
+                            {
+                                this.state.isLoadingH35Mint ?
+                                    <ReactLoading type={"balls"} color={'gray'}></ReactLoading> :
+                                    <button id="btnNotarize" onClick={this.withdrawUnstake}>Withdraw Unstaked</button>
+                            }
+                        </Col>
+                        <Col sm={12} md={6} lg={4}>
+                            {
+                                this.state.isLoadingHDLMint ?
+                                    <ReactLoading type={"balls"} color={'gray'}></ReactLoading> :
+                                    <button id="btnNotarize" onClick={this.claimRewards}>Claim Rewards</button>
+                            }
+                        </Col>
+                        <Col sm={12} md={6}>
+                            {
+                                this.state.isLoadingHDLMint ?
+                                    <ReactLoading type={"balls"} color={'gray'}></ReactLoading> :
+                                    <button id="btnNotarize" onClick={this.depositDist}>Deposit Distributions(Only admins can do this)</button>
+                            }
+                        </Col>
                     </Row>
                 </Container> : <></>}
             </div>
