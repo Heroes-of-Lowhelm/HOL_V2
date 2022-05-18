@@ -106,7 +106,7 @@ end
 (* - `_sender` must be the contract Admin. *)
 transition DepositFund(to: ByStr20, token_address: ByStr20, amount: Uint128)
     IsAdmin;
-    origin_amount <= account_balances[to][token_address];
+    origin_amount <- account_balances[to][token_address];
     match origin_amount with
     | Some value =>
         new_amount = builtin add value amount;
@@ -126,7 +126,7 @@ end
 (* - `_sender` must be the contract Admin. *)
 transition WithdrawFund(to: ByStr20, token_address: ByStr20, amount: Uint128)
     IsAdmin;
-    origin_amount <= account_balances[to][token_address];
+    origin_amount <- account_balances[to][token_address];
     match origin_amount with
     | Some value =>
         insufficient = builtin lt value amount;
