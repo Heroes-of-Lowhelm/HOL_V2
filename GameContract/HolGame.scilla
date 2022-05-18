@@ -1,0 +1,121 @@
+(* SPDX-License-Identifier: MIT *)
+scilla_version 0
+
+(***************************************************)
+(*               Associated library                *)
+(***************************************************)
+import IntUtils ListUtils 
+
+library HolGame
+let zero_address = 0x0000000000000000000000000000000000000000
+let one = Uint256 1
+let zero = Uint128 0
+let hundred = Uint128 100
+let ten = Uint256 10
+let true = True
+let false = False
+let empty_string = ""
+let one_msg = 
+    fun (msg : Message) => 
+        let nil_msg = Nil {Message} in
+        Cons {Message} msg nil_msg   
+
+(* Dummy user-defined ADT *)
+
+
+type Error =
+| CodeIsOwner
+| NotAdminError
+| AdminFoundError
+
+let make_error =
+    fun (result : Error) =>
+        let result_code = 
+        match result with
+        | CodeIsOwner                => Int32 -1
+        | NotAdminError                => Int32 -2
+        | AdminFoundError => Int32 -3
+        end
+        in
+        { _exception : "Error"; code : result_code }
+
+(***************************************************)
+(*             The contract definition             *)
+(***************************************************)
+contract HolGame 
+(
+    contract_owner: ByStr20
+)
+
+(* Mutable fields *)
+(* Set for admins
+  contract_owner is the admin by default *)
+field admins: Map ByStr20 Bool = 
+  let emp_map = Emp ByStr20 Bool in
+  builtin put emp_map contract_owner true
+
+(* $HOL token address *)
+field hol_token_address: ByStr20 = zero_address
+(* $CAST token address *)
+field cast_token_address: ByStr20 = zero_address
+
+(**************************************)
+(*             Procedures             *)
+(**************************************)
+
+procedure ThrowError(error: Error)
+    e = make_error error;
+    throw e
+end
+
+
+
+procedure IsNotOwner(address: ByStr20)
+    is_owner = builtin eq contract_owner address;
+    match is_owner with
+    | False =>
+        err = CodeIsOwner;
+        ThrowError err
+    | True =>
+    end
+end
+
+(* Check is the address is admin or not *)
+procedure IsAdmin()
+  has_admin <- exists admins[_sender];
+  match has_admin with
+  | True =>
+  | False =>
+    error = NotAdminError;
+    ThrowError error
+  end
+end
+
+
+(***************************************)
+(*             Transitions             *)
+(***************************************)
+
+transition DepositHol()
+end
+
+transition AddAdmin(admin: ByStr20)
+  IsNotOwner _sender;
+  has_admin <- exists admins[admin];
+  match has_admin with
+  | True =>
+    error = AdminFoundError;
+    ThrowError error
+  | False =>
+    admins[admin] := true
+  end
+end
+
+transition SetHolAddress(hol_address: ByStr20)
+    IsAdmin;
+    
+end
+
+transition SetCastAddress(cast_address: ByStr20)
+    IsAdmin;
+end

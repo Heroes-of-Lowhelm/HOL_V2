@@ -33,6 +33,7 @@ type Error =
 | NotAdminError
 | CodeIsSameBlock
 | AmountExceedsTotalAmount
+| AdminFoundError
 
 let make_error =
     fun (result : Error) =>
@@ -42,6 +43,7 @@ let make_error =
         | NotAdminError                => Int32 -2
         | CodeIsSameBlock            => Int32 -3
         | AmountExceedsTotalAmount => Int32 -4
+        | AdminFoundError          => Int32 -5
         end
         in
         { _exception : "Error"; code : result_code }
@@ -382,6 +384,18 @@ transition DepositDistribution(token_addr: ByStr20 with contract field allowance
         from: _sender
     };
     event e
+end
+
+transition AddAdmin(admin: ByStr20)
+  IsNotOwner _sender;
+  has_admin <- exists admins[admin];
+  match has_admin with
+  | True =>
+    error = AdminFoundError;
+    ThrowError error
+  | False =>
+    admins[admin] := true
+  end
 end
 
 transition TransferFromSuccessCallBack(initiator: ByStr20, sender: ByStr20, recipient: ByStr20, amount: Uint128)
