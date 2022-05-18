@@ -27,6 +27,7 @@ type Error =
 | CodeIsOwner
 | NotAdminError
 | AdminFoundError
+| RequestAmountExceedErr
 
 let make_error =
     fun (result : Error) =>
@@ -35,6 +36,7 @@ let make_error =
         | CodeIsOwner                => Int32 -1
         | NotAdminError                => Int32 -2
         | AdminFoundError => Int32 -3
+        | RequestAmountExceedErr => Int32 -4
         end
         in
         { _exception : "Error"; code : result_code }
@@ -58,7 +60,8 @@ field admins: Map ByStr20 Bool =
 field hol_token_address: ByStr20 = zero_address
 (* $CAST token address *)
 field cast_token_address: ByStr20 = zero_address
-
+(* Map user address => token address => balance *)
+field account_balances: Map ByStr20 (Map ByStr20 Uint128) = Emp ByStr20 (Map ByStr20 Uint128)
 (**************************************)
 (*             Procedures             *)
 (**************************************)
@@ -95,9 +98,67 @@ end
 (***************************************)
 (*             Transitions             *)
 (***************************************)
-
-transition DepositHol()
+(* This transition is invoked when depositing tx to the game contract is found *)
+(* @param: to - User address that funds are deposited  *)
+(* @param: token_address - Token address that user deposited  *)
+(* @param: amount - Token amount that user deposited  *)
+(* @Requirements: *)
+(* - `_sender` must be the contract Admin. *)
+transition DepositFund(to: ByStr20, token_address: ByStr20, amount: Uint128)
+    IsAdmin;
+    origin_amount <= account_balances[to][token_address];
+    match origin_amount with
+    | Some value =>
+        new_amount = builtin add value amount;
+        account_balances[to][token_address] := new_amount
+    | None =>
+        account_balances[to][token_address] := amount
+    end
+    
 end
+
+
+(* This transition is invoked when user request to withdraw*)
+(* @param: to - User address *)
+(* @param: token_address - Token address*)
+(* @param: amount - Token amount *)
+(* @Requirements: *)
+(* - `_sender` must be the contract Admin. *)
+transition WithdrawFund(to: ByStr20, token_address: ByStr20, amount: Uint128)
+    IsAdmin;
+    origin_amount <= account_balances[to][token_address];
+    match origin_amount with
+    | Some value =>
+        insufficient = builtin lt value amount;
+        match insufficient with
+        | True =>
+            error = RequestAmountExceedErr;
+            ThrowError error
+        | False =>
+            new_amount = builtin sub value amount;
+            account_balances[to][token_address] := new_amount;
+            (* Transfer funds to user accounts *)
+            msg = {
+                _tag: "Transfer";
+                _recipient: token_address;
+                _amount: zero;
+                to: to;
+                amount: amount
+            };
+            msgs = one_msg msg;
+            send msgs;
+            e = {
+                _eventname: "WithdrawSuccess";
+                to: to
+            };
+            event e
+        end
+    | None =>
+        error = RequestAmountExceedErr;
+        ThrowError error
+    end
+end
+
 
 transition AddAdmin(admin: ByStr20)
   IsNotOwner _sender;
@@ -112,10 +173,15 @@ transition AddAdmin(admin: ByStr20)
 end
 
 transition SetHolAddress(hol_address: ByStr20)
-    IsAdmin;
-    
+    IsNotOwner _sender;
+    hol_token_address := hol_address
 end
 
 transition SetCastAddress(cast_address: ByStr20)
-    IsAdmin;
+    IsNotOwner _sender;
+    cast_token_address := cast_address
+end
+
+transition TransferSuccessCallBack(sender: ByStr20, recipient: ByStr20, amount: Uint128)
+
 end
