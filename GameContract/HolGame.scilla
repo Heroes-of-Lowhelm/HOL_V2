@@ -28,6 +28,8 @@ type Error =
 | NotAdminError
 | AdminFoundError
 | RequestAmountExceedErr
+| TWAPHolAddressNotSetErr
+| MintPriceNotSetError
 
 let make_error =
     fun (result : Error) =>
@@ -37,6 +39,8 @@ let make_error =
         | NotAdminError                => Int32 -2
         | AdminFoundError => Int32 -3
         | RequestAmountExceedErr => Int32 -4
+        | TWAPHolAddressNotSetErr => Int32 -5
+        | MintPriceNotSetError    => Int32 -6
         end
         in
         { _exception : "Error"; code : result_code }
@@ -64,6 +68,17 @@ field cast_token_address: ByStr20 = zero_address
 field account_balances: Map ByStr20 (Map ByStr20 Uint128) = Emp ByStr20 (Map ByStr20 Uint128)
 
 field hol_twap_address: ByStr20 = zero_address
+
+(* Mint const in USD 10^5 multiplied value if 3$, then the value is 300000*)
+field mint_13_heroes_cost: Uint128 = zero;
+field mint_35_heroes_cost: Uint128 = zero;
+field mint_dl_heroes_cost: Uint128 = zero;
+field mint_13_gears_cost: Uint128 = zero;
+field mint_35_gears_cost: Uint128 = zero;
+field mint_13_heroes_batch_cost: Uint128 = zero;
+field mint_35_heroes_batch_cost: Uint128 = zero;
+field mint_13_gears_batch_cost: Uint128 = zero;
+field mint_35_gears_batch_cost: Uint128 = zero;
 (**************************************)
 (*             Procedures             *)
 (**************************************)
@@ -94,6 +109,56 @@ procedure IsAdmin()
     error = NotAdminError;
     ThrowError error
   end
+end
+
+(* Check if the TWAP of HOL is set or not *)
+procedure IsTWAPHolSet()
+    hol_twap_address_tmp <- hol_twap_address;
+    is_zero_addr = builtin eq hol_twap_address_tmp zero_address;
+    match is_zero_addr with
+    | True =>
+        error = TWAPHolAddressNotSetErr;
+        ThrowError error
+    | False =>
+    end
+end
+
+procedure IsMintPriceSet()
+    mint_13_heroes_cost_tmp <- mint_13_heroes_cost;
+    mint_35_heroes_cost_tmp <- mint_35_heroes_cost;
+    mint_dl_heroes_cost_tmp <- mint_dl_heroes_cost;
+    mint_13_gears_cost_tmp <- mint_13_gears_cost;
+    mint_35_gears_cost_tmp <- mint_35_gears_cost;
+    mint_13_heroes_batch_cost_tmp <- mint_13_heroes_batch_cost;
+    mint_35_heroes_batch_cost_tmp <- mint_35_heroes_batch_cost;
+    mint_13_gears_batch_cost_tmp <- mint_13_gears_batch_cost;
+    mint_35_gears_batch_cost_tmp <- mint_35_gears_batch_cost;
+
+    is_invalid1 = builtin eq mint_13_heroes_cost_tmp zero;
+    is_invalid2 = builtin eq mint_35_heroes_cost_tmp zero;
+    is_invalid3 = builtin eq mint_dl_heroes_cost_tmp zero;
+    is_invalid4 = builtin eq mint_13_gears_cost_tmp zero;
+    is_invalid5 = builtin eq mint_35_gears_cost_tmp zero;
+    is_invalid6 = builtin eq mint_13_heroes_batch_cost_tmp zero;
+    is_invalid7 = builtin eq mint_35_heroes_batch_cost_tmp zero;
+    is_invalid8 = builtin eq mint_13_gears_batch_cost_tmp zero;
+    is_invalid9 = builtin eq mint_35_gears_batch_cost_tmp zero;
+
+    is_invalid12 = orb is_invalid1 is_invalid2;
+    is_invalid123 = orb is_invalid12 is_invalid3;
+    is_invalid1234 = orb is_invalid123 is_invalid4;
+    is_invalid12345 = orb is_invalid1234 is_invalid5;
+    is_invalid123456 = orb is_invalid12345 is_invalid6;
+    is_invalid1234567 = orb is_invalid123456 is_invalid7;
+    is_invalid12345678 = orb is_invalid1234567 is_invalid8;
+    is_invalid123456789 = orb is_invalid12345678 is_invalid9;
+
+    match is_invalid123456789 with
+    | True =>
+        error = MintPriceNotSetError;
+        ThrowError error
+    | False =>
+    end
 end
 
 
@@ -162,6 +227,20 @@ transition WithdrawFund(to: ByStr20, token_address: ByStr20, amount: Uint128)
 end
 
 
+(* This transition is invoked when user request to Mint*)
+(* Firstly, checks if the user account has enough funds based on the TWAP Price *)
+(* And then reduce the user account balance *)
+(* And then call the Mint transition of the Mint Contract *)
+(* @param: to - User address *)
+(* @Requirements: *)
+(* - `_sender` must be the contract Admin. *)
+(* - TWAP of Hol address must be set. *)
+transition Mint13Heroes(to: ByStr20)
+    IsAdmin;
+    IsTWAPHolSet;
+    IsMintPriceSet;
+end
+
 transition AddAdmin(admin: ByStr20)
   IsNotOwner _sender;
   has_admin <- exists admins[admin];
@@ -188,6 +267,52 @@ end
 transition SetHolTWAPAddress(hol_twap: ByStr20 with contract field hol_twap: Uint128 end)
     IsNotOwner _sender;
     hol_twap_address := hol_twap
+end
+
+
+transition SetMint13HeroesPrice(price: Uint128)
+    IsNotOwner _sender;
+    mint_13_heroes_cost := price
+end
+
+transition SetMint35HeroesPrice(price: Uint128)
+    IsNotOwner _sender;
+    mint_35_heroes_cost := price
+end
+
+transition SetMintDLHeroesPrice(price: Uint128)
+    IsNotOwner _sender;
+    mint_dl_heroes_cost := price
+end
+
+transition SetMint13GearsPrice(price: Uint128)
+    IsNotOwner _sender;
+    mint_13_gears_cost := price
+end
+
+transition SetMint35GearsPrice(price: Uint128)
+    IsNotOwner _sender;
+    mint_35_gears_cost := price
+end
+
+transition SetMint13HeroesBatchPrice(price: Uint128)
+    IsNotOwner _sender;
+    mint_13_heroes_batch_cost := price
+end
+
+transition SetMint35HeroesBatchPrice(price: Uint128)
+    IsNotOwner _sender;
+    mint_35_heroes_batch_cost := price
+end
+
+transition SetMint13GearsBatchPrice(price: Uint128)
+    IsNotOwner _sender;
+    mint_13_gears_batch_cost := price
+end
+
+transition SetMint35GearsBatchPrice(price: Uint128)
+    IsNotOwner _sender;
+    mint_35_gears_batch_cost := price
 end
 
 transition TransferSuccessCallBack(sender: ByStr20, recipient: ByStr20, amount: Uint128)
