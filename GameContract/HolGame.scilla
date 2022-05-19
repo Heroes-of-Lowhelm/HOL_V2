@@ -10,7 +10,7 @@ library HolGame
 let zero_address = 0x0000000000000000000000000000000000000000
 let one = Uint256 1
 let zero = Uint128 0
-let hundred = Uint128 100
+let uint_128_10_power_5 = Uint128 100000
 let ten = Uint256 10
 let true = True
 let false = False
@@ -30,6 +30,7 @@ type Error =
 | RequestAmountExceedErr
 | TWAPHolAddressNotSetErr
 | MintPriceNotSetError
+| MintContractAddressNotSetErr
 
 let make_error =
     fun (result : Error) =>
@@ -41,6 +42,7 @@ let make_error =
         | RequestAmountExceedErr => Int32 -4
         | TWAPHolAddressNotSetErr => Int32 -5
         | MintPriceNotSetError    => Int32 -6
+        | MintContractAddressNotSetErr => Int32 -7
         end
         in
         { _exception : "Error"; code : result_code }
@@ -68,6 +70,8 @@ field cast_token_address: ByStr20 = zero_address
 field account_balances: Map ByStr20 (Map ByStr20 Uint128) = Emp ByStr20 (Map ByStr20 Uint128)
 
 field hol_twap_address: ByStr20 = zero_address
+
+field mint_contract_address: ByStr20 = zero_address
 
 (* Mint const in USD 10^5 multiplied value if 3$, then the value is 300000*)
 field mint_13_heroes_cost: Uint128 = zero;
@@ -123,6 +127,17 @@ procedure IsTWAPHolSet()
     end
 end
 
+procedure IsMintContractSet()
+    mint_contract_address_tmp <- mint_contract_address;
+    is_zero_addr = builtin eq mint_contract_address_tmp zero_address;
+    match is_zero_addr with
+    | True =>
+        error = MintContractAddressNotSetErr;
+        ThrowError error
+    | False =>
+    end
+end
+
 procedure IsMintPriceSet()
     mint_13_heroes_cost_tmp <- mint_13_heroes_cost;
     mint_35_heroes_cost_tmp <- mint_35_heroes_cost;
@@ -158,6 +173,25 @@ procedure IsMintPriceSet()
         error = MintPriceNotSetError;
         ThrowError error
     | False =>
+    end
+end
+
+procedure HandleFunds(to: ByStr20, token_address: ByStr20, amount: Uint128)
+    origin_amount <- account_balances[to][token_address];
+    match origin_amount with
+    | Some value =>
+        insufficient = builtin lt value amount;
+        match insufficient with
+        | True =>
+            error = RequestAmountExceedErr;
+            ThrowError error
+        | False =>
+            new_amount = builtin sub value amount;
+            account_balances[to][token_address] := new_amount;
+        end
+    | None =>
+        error = RequestAmountExceedErr;
+        ThrowError error
     end
 end
 
@@ -239,6 +273,28 @@ transition Mint13Heroes(to: ByStr20)
     IsAdmin;
     IsTWAPHolSet;
     IsMintPriceSet;
+    IsMintContractSet;
+
+    (* Remote Fetch HOL price *)
+    hol_twap_address_tmp <- hol_twap_address;
+    twap_hol <- & hol_twap_address_tmp.hol_twap;
+    (* price/twap * 10^5 *)
+    mint_13_heroes_cost_tmp <- mint_13_heroes_cost;
+    hol_price_tmp = builtin mul mint_13_heroes_cost_tmp uint_128_10_power_5;
+    mint_hol_price = builtin div hol_price_tmp twap_hol;
+
+    hol_token_address_tmp <- hol_token_address;
+    HandleFunds to hol_token_address_tmp mint_hol_price;
+
+    mint_contract_address_tmp <- mint_contract_address;
+    (* Call Mint Transition *)
+    msg = {
+        _tag: "Mint13Heroes";
+        _recipient: mint_contract_address_tmp;
+        _amount: zero;
+    }
+    msgs = one_msg msg;
+    send msgs
 end
 
 transition AddAdmin(admin: ByStr20)
