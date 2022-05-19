@@ -31,6 +31,8 @@ type Error =
 | TWAPHolAddressNotSetErr
 | MintPriceNotSetError
 | MintContractAddressNotSetErr
+| TWAPCastAddressNotSetErr
+| TokenAddressNotSetErr
 
 let make_error =
     fun (result : Error) =>
@@ -43,6 +45,8 @@ let make_error =
         | TWAPHolAddressNotSetErr => Int32 -5
         | MintPriceNotSetError    => Int32 -6
         | MintContractAddressNotSetErr => Int32 -7
+        | TWAPCastAddressNotSetErr    => Int32 -8
+        | TokenAddressNotSetErr       => Int32 -9
         end
         in
         { _exception : "Error"; code : result_code }
@@ -70,6 +74,7 @@ field cast_token_address: ByStr20 = zero_address
 field account_balances: Map ByStr20 (Map ByStr20 Uint128) = Emp ByStr20 (Map ByStr20 Uint128)
 
 field hol_twap_address: ByStr20 = zero_address
+field cast_twap_address: ByStr20 = zero_address
 
 field mint_contract_address: ByStr20 = zero_address
 
@@ -127,12 +132,39 @@ procedure IsTWAPHolSet()
     end
 end
 
+(* Check if the TWAP of CAST is set or not *)
+procedure IsTWAPCastSet()
+    cast_twap_address_tmp <- cast_twap_address;
+    is_zero_addr = builtin eq cast_twap_address_tmp zero_address;
+    match is_zero_addr with
+    | True =>
+        error = TWAPCastAddressNotSetErr;
+        ThrowError error
+    | False =>
+    end
+end
+
+
 procedure IsMintContractSet()
     mint_contract_address_tmp <- mint_contract_address;
     is_zero_addr = builtin eq mint_contract_address_tmp zero_address;
     match is_zero_addr with
     | True =>
         error = MintContractAddressNotSetErr;
+        ThrowError error
+    | False =>
+    end
+end
+
+procedure IsTokenAddressesSet()
+    cast_token_address_tmp <- cast_token_address;
+    hol_token_address_tmp <- hol_token_address;
+    is_invalid_hol = builtin eq hol_token_address_tmp zero_address;
+    is_invalid_cast = builtin eq cast_token_address_tmp zero_address;
+    is_invalid = orb is_invalid_hol is_invalid_cast;
+    match is_invalid with
+    | True =>
+        error = TokenAddressNotSetErr;
         ThrowError error
     | False =>
     end
@@ -271,16 +303,47 @@ end
 (* - TWAP of Hol address must be set. *)
 transition Mint13Heroes(to: ByStr20)
     IsAdmin;
+    IsTWAPCastSet;
+    IsMintPriceSet;
+    IsMintContractSet;
+    IsTokenAddressesSet;
+
+    (* Remote Fetch CAST price *)
+    cast_twap_address_tmp <- cast_twap_address;
+    twap_cast <- & cast_twap_address_tmp.twap;
+
+    (* price/twap * 10^5 *)
+    mint_13_heroes_cost_tmp <- mint_13_heroes_cost;
+    cast_price_tmp = builtin mul mint_13_heroes_cost_tmp uint_128_10_power_5;
+    mint_cast_price = builtin div cast_price_tmp twap_cast;
+
+    cast_token_address_tmp <- cast_token_address;
+    HandleFunds to cast_token_address_tmp mint_cast_price;
+
+    mint_contract_address_tmp <- mint_contract_address;
+    (* Call Mint Transition *)
+    msg = {
+        _tag: "Mint13Heroes";
+        _recipient: mint_contract_address_tmp;
+        _amount: zero;
+    }
+    msgs = one_msg msg;
+    send msgs
+end
+
+transition Mint35Heroes(to: ByStr20)
+    IsAdmin;
     IsTWAPHolSet;
     IsMintPriceSet;
     IsMintContractSet;
+    IsTokenAddressesSet;
 
     (* Remote Fetch HOL price *)
     hol_twap_address_tmp <- hol_twap_address;
-    twap_hol <- & hol_twap_address_tmp.hol_twap;
+    twap_hol <- & hol_twap_address_tmp.twap;
     (* price/twap * 10^5 *)
-    mint_13_heroes_cost_tmp <- mint_13_heroes_cost;
-    hol_price_tmp = builtin mul mint_13_heroes_cost_tmp uint_128_10_power_5;
+    mint_35_heroes_cost_tmp <- mint_35_heroes_cost;
+    hol_price_tmp = builtin mul mint_35_heroes_cost_tmp uint_128_10_power_5;
     mint_hol_price = builtin div hol_price_tmp twap_hol;
 
     hol_token_address_tmp <- hol_token_address;
@@ -289,7 +352,7 @@ transition Mint13Heroes(to: ByStr20)
     mint_contract_address_tmp <- mint_contract_address;
     (* Call Mint Transition *)
     msg = {
-        _tag: "Mint13Heroes";
+        _tag: "Mint35Heroes";
         _recipient: mint_contract_address_tmp;
         _amount: zero;
     }
@@ -320,11 +383,15 @@ transition SetCastAddress(cast_address: ByStr20)
 end
 
 
-transition SetHolTWAPAddress(hol_twap: ByStr20 with contract field hol_twap: Uint128 end)
+transition SetHolTWAPAddress(hol_twap: ByStr20 with contract field twap: Uint128 end)
     IsNotOwner _sender;
     hol_twap_address := hol_twap
 end
 
+transition SetCastTWAPAddress(cast_twap: ByStr20 with contract field twap: Uint128 end)
+    IsNotOwner _sender;
+    cast_twap_address := cast_twap
+end
 
 transition SetMint13HeroesPrice(price: Uint128)
     IsNotOwner _sender;

@@ -31,7 +31,7 @@ contract HolTWAPOracle
 )
 
 (* Mutable fields *)
-field hol_twap: Uint128 = Uint128 0
+field twap: Uint128 = Uint128 0
 
 (**************************************)
 (*             Procedures             *)
@@ -62,7 +62,7 @@ end
 (* param twapHol:      TWAP of $Hol.                                                                                                *)
 transition updateTWAPPrice(twapHol: Uint128)
     IsNotOwner _sender;
-    hol_twap := twapHol;
+    twap := twapHol;
     e = {_eventname: "UpdatedTWAPPrice"; holTWAP: twapHol};
     event e
 end
