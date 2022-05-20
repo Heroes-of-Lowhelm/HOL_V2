@@ -550,6 +550,39 @@ transition MintDLHeroes(to: ByStr20)
     send msgs
 end
 
+
+transition FreeMint35Heroes(to: ByStr20)
+    IsAdmin;
+    IsMintContractSet;
+
+    mint_contract_address_tmp <- mint_contract_address;
+    (* Call Mint Transition *)
+    msg = {
+        _tag: "Mint35Heroes";
+        _recipient: mint_contract_address_tmp;
+        _amount: zero;
+    }
+    msgs = one_msg msg;
+    send msgs
+end
+
+
+transition FreeMint35Gears(to: ByStr20)
+    IsAdmin;
+    IsMintContractSet;
+
+    mint_contract_address_tmp <- mint_contract_address;
+    (* Call Mint Transition *)
+    msg = {
+        _tag: "Mint35Gears";
+        _recipient: mint_contract_address_tmp;
+        _amount: zero;
+    }
+    msgs = one_msg msg;
+    send msgs
+end
+
+
 transition AddAdmin(admin: ByStr20)
   IsNotOwner _sender;
   has_admin <- exists admins[admin];
