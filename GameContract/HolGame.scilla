@@ -81,7 +81,6 @@ field mint_contract_address: ByStr20 = zero_address
 (* Mint const in USD 10^5 multiplied value if 3$, then the value is 300000*)
 field mint_13_heroes_cost: Uint128 = zero;
 field mint_35_heroes_cost: Uint128 = zero;
-field mint_dl_heroes_cost: Uint128 = zero;
 field mint_13_gears_cost: Uint128 = zero;
 field mint_35_gears_cost: Uint128 = zero;
 field mint_13_heroes_batch_cost: Uint128 = zero;
@@ -173,7 +172,6 @@ end
 procedure IsMintPriceSet()
     mint_13_heroes_cost_tmp <- mint_13_heroes_cost;
     mint_35_heroes_cost_tmp <- mint_35_heroes_cost;
-    mint_dl_heroes_cost_tmp <- mint_dl_heroes_cost;
     mint_13_gears_cost_tmp <- mint_13_gears_cost;
     mint_35_gears_cost_tmp <- mint_35_gears_cost;
     mint_13_heroes_batch_cost_tmp <- mint_13_heroes_batch_cost;
@@ -183,13 +181,12 @@ procedure IsMintPriceSet()
 
     is_invalid1 = builtin eq mint_13_heroes_cost_tmp zero;
     is_invalid2 = builtin eq mint_35_heroes_cost_tmp zero;
-    is_invalid3 = builtin eq mint_dl_heroes_cost_tmp zero;
-    is_invalid4 = builtin eq mint_13_gears_cost_tmp zero;
-    is_invalid5 = builtin eq mint_35_gears_cost_tmp zero;
-    is_invalid6 = builtin eq mint_13_heroes_batch_cost_tmp zero;
-    is_invalid7 = builtin eq mint_35_heroes_batch_cost_tmp zero;
-    is_invalid8 = builtin eq mint_13_gears_batch_cost_tmp zero;
-    is_invalid9 = builtin eq mint_35_gears_batch_cost_tmp zero;
+    is_invalid3 = builtin eq mint_13_gears_cost_tmp zero;
+    is_invalid4 = builtin eq mint_35_gears_cost_tmp zero;
+    is_invalid5 = builtin eq mint_13_heroes_batch_cost_tmp zero;
+    is_invalid6 = builtin eq mint_35_heroes_batch_cost_tmp zero;
+    is_invalid7 = builtin eq mint_13_gears_batch_cost_tmp zero;
+    is_invalid8 = builtin eq mint_35_gears_batch_cost_tmp zero;
 
     is_invalid12 = orb is_invalid1 is_invalid2;
     is_invalid123 = orb is_invalid12 is_invalid3;
@@ -198,9 +195,8 @@ procedure IsMintPriceSet()
     is_invalid123456 = orb is_invalid12345 is_invalid6;
     is_invalid1234567 = orb is_invalid123456 is_invalid7;
     is_invalid12345678 = orb is_invalid1234567 is_invalid8;
-    is_invalid123456789 = orb is_invalid12345678 is_invalid9;
 
-    match is_invalid123456789 with
+    match is_invalid12345678 with
     | True =>
         error = MintPriceNotSetError;
         ThrowError error
@@ -360,6 +356,81 @@ transition Mint35Heroes(to: ByStr20)
     send msgs
 end
 
+transition Mint13Gears(to: ByStr20)
+    IsAdmin;
+    IsTWAPCastSet;
+    IsMintPriceSet;
+    IsMintContractSet;
+    IsTokenAddressesSet;
+
+    (* Remote Fetch CAST price *)
+    cast_twap_address_tmp <- cast_twap_address;
+    twap_cast <- & cast_twap_address_tmp.twap;
+
+    (* price/twap * 10^5 *)
+    mint_13_gears_cost_tmp <- mint_13_gears_cost;
+    cast_price_tmp = builtin mul mint_13_gears_cost_tmp uint_128_10_power_5;
+    mint_cast_price = builtin div cast_price_tmp twap_cast;
+
+    cast_token_address_tmp <- cast_token_address;
+    HandleFunds to cast_token_address_tmp mint_cast_price;
+
+    mint_contract_address_tmp <- mint_contract_address;
+    (* Call Mint Transition *)
+    msg = {
+        _tag: "Mint13Gears";
+        _recipient: mint_contract_address_tmp;
+        _amount: zero;
+    }
+    msgs = one_msg msg;
+    send msgs
+end
+
+transition Mint35Gears(to: ByStr20)
+    IsAdmin;
+    IsTWAPHolSet;
+    IsMintPriceSet;
+    IsMintContractSet;
+    IsTokenAddressesSet;
+
+    (* Remote Fetch HOL price *)
+    hol_twap_address_tmp <- hol_twap_address;
+    twap_hol <- & hol_twap_address_tmp.twap;
+    (* price/twap * 10^5 *)
+    mint_35_gears_cost_tmp <- mint_35_gears_cost;
+    hol_price_tmp = builtin mul mint_35_gears_cost_tmp uint_128_10_power_5;
+    mint_hol_price = builtin div hol_price_tmp twap_hol;
+
+    hol_token_address_tmp <- hol_token_address;
+    HandleFunds to hol_token_address_tmp mint_hol_price;
+
+    mint_contract_address_tmp <- mint_contract_address;
+    (* Call Mint Transition *)
+    msg = {
+        _tag: "Mint35Gears";
+        _recipient: mint_contract_address_tmp;
+        _amount: zero;
+    }
+    msgs = one_msg msg;
+    send msgs
+end
+
+(* This transition uses card in Game. *)
+transition MintDLHeroes(to: ByStr20)
+    IsAdmin;
+    IsMintContractSet;
+
+    mint_contract_address_tmp <- mint_contract_address;
+    (* Call Mint Transition *)
+    msg = {
+        _tag: "MintDLHeroes";
+        _recipient: mint_contract_address_tmp;
+        _amount: zero;
+    }
+    msgs = one_msg msg;
+    send msgs
+end
+
 transition AddAdmin(admin: ByStr20)
   IsNotOwner _sender;
   has_admin <- exists admins[admin];
@@ -403,10 +474,6 @@ transition SetMint35HeroesPrice(price: Uint128)
     mint_35_heroes_cost := price
 end
 
-transition SetMintDLHeroesPrice(price: Uint128)
-    IsNotOwner _sender;
-    mint_dl_heroes_cost := price
-end
 
 transition SetMint13GearsPrice(price: Uint128)
     IsNotOwner _sender;
