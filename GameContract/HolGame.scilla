@@ -20,6 +20,11 @@ let one_msg =
         let nil_msg = Nil {Message} in
         Cons {Message} msg nil_msg   
 
+let two_msgs =
+  fun (msg1: Message) =>
+  fun (msg2: Message) =>
+    let msgs_tmp = one_msg msg2 in
+    Cons {Message} msg1 msgs_tmp
 (* Dummy user-defined ADT *)
 
 
@@ -33,6 +38,7 @@ type Error =
 | MintContractAddressNotSetErr
 | TWAPCastAddressNotSetErr
 | TokenAddressNotSetErr
+| EvolutionAddressNotSetErr
 
 let make_error =
     fun (result : Error) =>
@@ -47,6 +53,7 @@ let make_error =
         | MintContractAddressNotSetErr => Int32 -7
         | TWAPCastAddressNotSetErr    => Int32 -8
         | TokenAddressNotSetErr       => Int32 -9
+        | EvolutionAddressNotSetErr   => Int32 -10
         end
         in
         { _exception : "Error"; code : result_code }
@@ -56,7 +63,10 @@ let make_error =
 (***************************************************)
 contract HolGame 
 (
-    contract_owner: ByStr20
+    contract_owner: ByStr20,
+    heroes_nft_address: ByStr20,
+    dl_heroes_nft_address: ByStr20,
+    gears_nft_address: ByStr20
 )
 
 (* Mutable fields *)
@@ -79,14 +89,22 @@ field cast_twap_address: ByStr20 = zero_address
 field mint_contract_address: ByStr20 = zero_address
 
 (* Mint const in USD 10^5 multiplied value if 3$, then the value is 300000*)
-field mint_13_heroes_cost: Uint128 = zero;
-field mint_35_heroes_cost: Uint128 = zero;
-field mint_13_gears_cost: Uint128 = zero;
-field mint_35_gears_cost: Uint128 = zero;
-field mint_13_heroes_batch_cost: Uint128 = zero;
-field mint_35_heroes_batch_cost: Uint128 = zero;
-field mint_13_gears_batch_cost: Uint128 = zero;
-field mint_35_gears_batch_cost: Uint128 = zero;
+field mint_13_heroes_cost: Uint128 = zero
+field mint_35_heroes_cost: Uint128 = zero
+field mint_13_gears_cost: Uint128 = zero
+field mint_35_gears_cost: Uint128 = zero
+field mint_13_heroes_batch_cost: Uint128 = zero
+field mint_35_heroes_batch_cost: Uint128 = zero
+field mint_13_gears_batch_cost: Uint128 = zero
+field mint_35_gears_batch_cost: Uint128 = zero
+
+(* Evolution Contract addresses *)
+field heroes_evolution_address: ByStr20 = zero_address
+field dl_heroes_evolution_address: ByStr20 = zero_address
+field gears_evolution_address: ByStr20 = zero_address
+
+
+
 (**************************************)
 (*             Procedures             *)
 (**************************************)
@@ -164,6 +182,25 @@ procedure IsTokenAddressesSet()
     match is_invalid with
     | True =>
         error = TokenAddressNotSetErr;
+        ThrowError error
+    | False =>
+    end
+end
+
+procedure IsEvolutionAddressesSet()
+    heroes_evolution_address_tmp <- heroes_evolution_address;
+    dl_heroes_evolution_address_tmp <- dl_heroes_evolution_address;
+    gears_evolution_address_tmp <- gears_evolution_address;
+
+    is_invalid_heroes = builtin eq heroes_evolution_address_tmp zero_address;
+    is_invalid_dl = builtin eq dl_heroes_evolution_address_tmp zero_address;
+    is_invalid_gears = builtin eq gears_evolution_address_tmp zero_address;
+
+    is_invalid_heroes_and_dl = orb is_invalid_heroes is_invalid_dl
+    is_invalid = orb is_invalid_heroes_and_dl is_invalid_gears;
+    match is_invalid with
+    | True =>
+        error = EvolutionAddressNotSetErr;
         ThrowError error
     | False =>
     end
@@ -582,6 +619,105 @@ transition FreeMint35Gears(to: ByStr20)
     send msgs
 end
 
+transition EvolveHeroes(id_lv_max: Uint256, id_lv_any: Uint256)
+    IsAdmin;
+    IsEvolutionAddressesSet;
+
+    heroes_evolution_address_tmp <- heroes_evolution_address;
+    (* Call Evolve Transition *)
+    msg = {
+        _tag: "EvolveHeroes";
+        _recipient: heroes_evolution_address_tmp;
+        _amount: zero;
+        id_lv_max: id_lv_max;
+        id_lv_any: id_lv_any
+    }
+    msgs = one_msg msg;
+    send msgs
+
+    (* Burn 2 NFTs *)
+    msg_one = {
+        _tag: "Burn";
+        _recipient: heroes_nft_address;
+        _amount: zero;
+        token_id: id_lv_max
+    };
+    msg_two = {
+        _tag: "Burn";
+        _recipient: heroes_nft_address;
+        _amount: zero;
+        token_id: id_lv_any
+    };
+    msgs = two_msgs msg_one msg_two;
+    send msgs
+
+end
+
+transition EvolveDLHeroes(id_lv_max: Uint256, id_lv_any: Uint256)
+    IsAdmin;
+    IsEvolutionAddressesSet;
+
+    dl_heroes_evolution_address_tmp <- dl_heroes_evolution_address;
+    (* Call Evolve Transition *)
+    msg = {
+        _tag: "EvolveHeroes";
+        _recipient: dl_heroes_evolution_address_tmp;
+        _amount: zero;
+        id_lv_max: id_lv_max;
+        id_lv_any: id_lv_any
+    }
+    msgs = one_msg msg;
+    send msgs;
+
+    (* Burn 2 NFTs *)
+    msg_one = {
+        _tag: "Burn";
+        _recipient: dl_heroes_nft_address;
+        _amount: zero;
+        token_id: id_lv_max
+    };
+    msg_two = {
+        _tag: "Burn";
+        _recipient: dl_heroes_nft_address;
+        _amount: zero;
+        token_id: id_lv_any
+    };
+    msgs = two_msgs msg_one msg_two;
+    send msgs
+end
+
+transition EvoloveGears(id_lv_max: Uint256, id_lv_any: Uint256)
+    IsAdmin;
+    IsEvolutionAddressesSet;
+
+    gears_evolution_address_tmp <- gears_evolution_address;
+    (* Call Evolve Transition *)
+    msg = {
+        _tag: "EvolveGears";
+        _recipient: gears_evolution_address_tmp;
+        _amount: zero;
+        id_lv_max: id_lv_max;
+        id_lv_any: id_lv_any
+    }
+    msgs = one_msg msg;
+    send msgs
+    
+    (* Burn 2 NFTs *)
+    msg_one = {
+        _tag: "Burn";
+        _recipient: gears_nft_address;
+        _amount: zero;
+        token_id: id_lv_max
+    };
+    msg_two = {
+        _tag: "Burn";
+        _recipient: gears_nft_address;
+        _amount: zero;
+        token_id: id_lv_any
+    };
+    msgs = two_msgs msg_one msg_two;
+    send msgs
+end
 
 transition AddAdmin(admin: ByStr20)
   IsNotOwner _sender;
