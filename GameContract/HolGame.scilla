@@ -4,7 +4,7 @@ scilla_version 0
 (***************************************************)
 (*               Associated library                *)
 (***************************************************)
-import IntUtils ListUtils 
+import IntUtils ListUtils BoolUtils
 
 library HolGame
 let zero_address = 0x0000000000000000000000000000000000000000
@@ -67,7 +67,9 @@ contract HolGame
     contract_owner: ByStr20,
     heroes_nft_address: ByStr20,
     dl_heroes_nft_address: ByStr20,
-    gears_nft_address: ByStr20
+    gears_nft_address: ByStr20,
+    hol_twap_address: ByStr20 with contract field twap: Uint128 end,
+    cast_twap_address: ByStr20 with contract field twap: Uint128 end
 )
 
 (* Mutable fields *)
@@ -83,9 +85,6 @@ field hol_token_address: ByStr20 = zero_address
 field cast_token_address: ByStr20 = zero_address
 (* Map user address => token address => balance *)
 field account_balances: Map ByStr20 (Map ByStr20 Uint128) = Emp ByStr20 (Map ByStr20 Uint128)
-
-field hol_twap_address: ByStr20 = zero_address
-field cast_twap_address: ByStr20 = zero_address
 
 field mint_contract_address: ByStr20 = zero_address
 
@@ -139,7 +138,7 @@ procedure IsAdmin()
 end
 
 (* Check if the TWAP of HOL is set or not *)
-procedure IsTWAPHolSet()
+(* procedure IsTWAPHolSet()
     hol_twap_address_tmp <- hol_twap_address;
     is_zero_addr = builtin eq hol_twap_address_tmp zero_address;
     match is_zero_addr with
@@ -148,10 +147,10 @@ procedure IsTWAPHolSet()
         ThrowError error
     | False =>
     end
-end
+end *)
 
 (* Check if the TWAP of CAST is set or not *)
-procedure IsTWAPCastSet()
+(* procedure IsTWAPCastSet()
     cast_twap_address_tmp <- cast_twap_address;
     is_zero_addr = builtin eq cast_twap_address_tmp zero_address;
     match is_zero_addr with
@@ -160,7 +159,7 @@ procedure IsTWAPCastSet()
         ThrowError error
     | False =>
     end
-end
+end *)
 
 
 procedure IsMintContractSet()
@@ -197,7 +196,7 @@ procedure IsEvolutionAddressesSet()
     is_invalid_dl = builtin eq dl_heroes_evolution_address_tmp zero_address;
     is_invalid_gears = builtin eq gears_evolution_address_tmp zero_address;
 
-    is_invalid_heroes_and_dl = orb is_invalid_heroes is_invalid_dl
+    is_invalid_heroes_and_dl = orb is_invalid_heroes is_invalid_dl;
     is_invalid = orb is_invalid_heroes_and_dl is_invalid_gears;
     match is_invalid with
     | True =>
@@ -253,7 +252,7 @@ procedure HandleFunds(to: ByStr20, token_address: ByStr20, amount: Uint128)
             ThrowError error
         | False =>
             new_amount = builtin sub value amount;
-            account_balances[to][token_address] := new_amount;
+            account_balances[to][token_address] := new_amount
         end
     | None =>
         error = RequestAmountExceedErr;
@@ -337,14 +336,13 @@ end
 (* - TWAP of Hol address must be set. *)
 transition Mint13Heroes(to: ByStr20)
     IsAdmin;
-    IsTWAPCastSet;
+    (* IsTWAPCastSet; *)
     IsMintPriceSet;
     IsMintContractSet;
     IsTokenAddressesSet;
 
     (* Remote Fetch CAST price *)
-    cast_twap_address_tmp <- cast_twap_address;
-    twap_cast <- & cast_twap_address_tmp.twap;
+    twap_cast <- & cast_twap_address.twap;
 
     (* price/twap * 10^5 *)
     mint_13_heroes_cost_tmp <- mint_13_heroes_cost;
@@ -359,22 +357,21 @@ transition Mint13Heroes(to: ByStr20)
     msg = {
         _tag: "Mint13Heroes";
         _recipient: mint_contract_address_tmp;
-        _amount: zero;
-    }
+        _amount: zero
+    };
     msgs = one_msg msg;
     send msgs
 end
 
 transition Mint35Heroes(to: ByStr20)
     IsAdmin;
-    IsTWAPHolSet;
+    (* IsTWAPHolSet; *)
     IsMintPriceSet;
     IsMintContractSet;
     IsTokenAddressesSet;
 
     (* Remote Fetch HOL price *)
-    hol_twap_address_tmp <- hol_twap_address;
-    twap_hol <- & hol_twap_address_tmp.twap;
+    twap_hol <- & hol_twap_address.twap;
     (* price/twap * 10^5 *)
     mint_35_heroes_cost_tmp <- mint_35_heroes_cost;
     hol_price_tmp = builtin mul mint_35_heroes_cost_tmp uint_128_10_power_5;
@@ -388,22 +385,21 @@ transition Mint35Heroes(to: ByStr20)
     msg = {
         _tag: "Mint35Heroes";
         _recipient: mint_contract_address_tmp;
-        _amount: zero;
-    }
+        _amount: zero
+    };
     msgs = one_msg msg;
     send msgs
 end
 
 transition Mint13Gears(to: ByStr20)
     IsAdmin;
-    IsTWAPCastSet;
+    (* IsTWAPCastSet; *)
     IsMintPriceSet;
     IsMintContractSet;
     IsTokenAddressesSet;
 
     (* Remote Fetch CAST price *)
-    cast_twap_address_tmp <- cast_twap_address;
-    twap_cast <- & cast_twap_address_tmp.twap;
+    twap_cast <- & cast_twap_address.twap;
 
     (* price/twap * 10^5 *)
     mint_13_gears_cost_tmp <- mint_13_gears_cost;
@@ -418,22 +414,21 @@ transition Mint13Gears(to: ByStr20)
     msg = {
         _tag: "Mint13Gears";
         _recipient: mint_contract_address_tmp;
-        _amount: zero;
-    }
+        _amount: zero
+    };
     msgs = one_msg msg;
     send msgs
 end
 
 transition Mint35Gears(to: ByStr20)
     IsAdmin;
-    IsTWAPHolSet;
+    (* IsTWAPHolSet; *)
     IsMintPriceSet;
     IsMintContractSet;
     IsTokenAddressesSet;
 
     (* Remote Fetch HOL price *)
-    hol_twap_address_tmp <- hol_twap_address;
-    twap_hol <- & hol_twap_address_tmp.twap;
+    twap_hol <- & hol_twap_address.twap;
     (* price/twap * 10^5 *)
     mint_35_gears_cost_tmp <- mint_35_gears_cost;
     hol_price_tmp = builtin mul mint_35_gears_cost_tmp uint_128_10_power_5;
@@ -447,22 +442,21 @@ transition Mint35Gears(to: ByStr20)
     msg = {
         _tag: "Mint35Gears";
         _recipient: mint_contract_address_tmp;
-        _amount: zero;
-    }
+        _amount: zero
+    };
     msgs = one_msg msg;
     send msgs
 end
 
 transition BatcMint13Heroes(to: ByStr20)
     IsAdmin;
-    IsTWAPCastSet;
+    (* IsTWAPCastSet; *)
     IsMintPriceSet;
     IsMintContractSet;
     IsTokenAddressesSet;
 
     (* Remote Fetch CAST price *)
-    cast_twap_address_tmp <- cast_twap_address;
-    twap_cast <- & cast_twap_address_tmp.twap;
+    twap_cast <- & cast_twap_address.twap;
 
     (* price/twap * 10^5 *)
     mint_13_heroes_batch_cost_tmp <- mint_13_heroes_batch_cost;
@@ -477,22 +471,21 @@ transition BatcMint13Heroes(to: ByStr20)
     msg = {
         _tag: "BatchMint13Heroes";
         _recipient: mint_contract_address_tmp;
-        _amount: zero;
-    }
+        _amount: zero
+    };
     msgs = one_msg msg;
     send msgs
 end
 
 transition BatchMint35Heroes(to: ByStr20)
     IsAdmin;
-    IsTWAPHolSet;
+    (* IsTWAPHolSet; *)
     IsMintPriceSet;
     IsMintContractSet;
     IsTokenAddressesSet;
 
     (* Remote Fetch HOL price *)
-    hol_twap_address_tmp <- hol_twap_address;
-    twap_hol <- & hol_twap_address_tmp.twap;
+    twap_hol <- & hol_twap_address.twap;
     (* price/twap * 10^5 *)
     mint_35_heroes_batch_cost_tmp <- mint_35_heroes_batch_cost;
     hol_price_tmp = builtin mul mint_35_heroes_batch_cost_tmp uint_128_10_power_5;
@@ -506,22 +499,21 @@ transition BatchMint35Heroes(to: ByStr20)
     msg = {
         _tag: "BatchMint35Heroes";
         _recipient: mint_contract_address_tmp;
-        _amount: zero;
-    }
+        _amount: zero
+    };
     msgs = one_msg msg;
     send msgs
 end
 
 transition BatchMint13Gears(to: ByStr20)
     IsAdmin;
-    IsTWAPCastSet;
+    (* IsTWAPCastSet; *)
     IsMintPriceSet;
     IsMintContractSet;
     IsTokenAddressesSet;
 
     (* Remote Fetch CAST price *)
-    cast_twap_address_tmp <- cast_twap_address;
-    twap_cast <- & cast_twap_address_tmp.twap;
+    twap_cast <- & cast_twap_address.twap;
 
     (* price/twap * 10^5 *)
     mint_13_gears_batch_cost_tmp <- mint_13_gears_batch_cost;
@@ -536,22 +528,21 @@ transition BatchMint13Gears(to: ByStr20)
     msg = {
         _tag: "BatchMint13Gears";
         _recipient: mint_contract_address_tmp;
-        _amount: zero;
-    }
+        _amount: zero
+    };
     msgs = one_msg msg;
     send msgs
 end
 
 transition BatchMint35Gears(to: ByStr20)
     IsAdmin;
-    IsTWAPHolSet;
+    (* IsTWAPHolSet; *)
     IsMintPriceSet;
     IsMintContractSet;
     IsTokenAddressesSet;
 
     (* Remote Fetch HOL price *)
-    hol_twap_address_tmp <- hol_twap_address;
-    twap_hol <- & hol_twap_address_tmp.twap;
+    twap_hol <- & hol_twap_address.twap;
     (* price/twap * 10^5 *)
     mint_35_gears_batch_cost_tmp <- mint_35_gears_batch_cost;
     hol_price_tmp = builtin mul mint_35_gears_batch_cost_tmp uint_128_10_power_5;
@@ -565,8 +556,8 @@ transition BatchMint35Gears(to: ByStr20)
     msg = {
         _tag: "BatchMint35Gears";
         _recipient: mint_contract_address_tmp;
-        _amount: zero;
-    }
+        _amount: zero
+    };
     msgs = one_msg msg;
     send msgs
 end
@@ -582,8 +573,8 @@ transition MintDLHeroes(to: ByStr20)
     msg = {
         _tag: "MintDLHeroes";
         _recipient: mint_contract_address_tmp;
-        _amount: zero;
-    }
+        _amount: zero
+    };
     msgs = one_msg msg;
     send msgs
 end
@@ -598,8 +589,8 @@ transition FreeMint35Heroes(to: ByStr20)
     msg = {
         _tag: "Mint35Heroes";
         _recipient: mint_contract_address_tmp;
-        _amount: zero;
-    }
+        _amount: zero
+    };
     msgs = one_msg msg;
     send msgs
 end
@@ -614,8 +605,8 @@ transition FreeMint35Gears(to: ByStr20)
     msg = {
         _tag: "Mint35Gears";
         _recipient: mint_contract_address_tmp;
-        _amount: zero;
-    }
+        _amount: zero
+    };
     msgs = one_msg msg;
     send msgs
 end
@@ -624,14 +615,13 @@ end
 
 transition MintSpecificHeroes(to: ByStr20, rarity: String, token_type: String)
     IsAdmin;
-    IsTWAPHolSet;
+    (* IsTWAPHolSet; *)
     IsMintPriceSet;
     IsMintContractSet;
     IsTokenAddressesSet;
 
     (* Remote Fetch HOL price *)
-    hol_twap_address_tmp <- hol_twap_address;
-    twap_hol <- & hol_twap_address_tmp.twap;
+    twap_hol <- & hol_twap_address.twap;
     (* price/twap * 10^5 *)
     mint_35_heroes_cost_tmp <- mint_35_heroes_cost;
     hol_price_tmp = builtin mul mint_35_heroes_cost_tmp uint_128_10_power_5;
@@ -648,7 +638,7 @@ transition MintSpecificHeroes(to: ByStr20, rarity: String, token_type: String)
         _amount: zero;
         rarity: rarity;
         token_type: token_type
-    }
+    };
     msgs = one_msg msg;
     send msgs
 end
@@ -656,14 +646,13 @@ end
 
 transition MintSpecificGears(to: ByStr20, rarity: String, token_type: String, mainstat: String)
     IsAdmin;
-    IsTWAPHolSet;
+    (* IsTWAPHolSet; *)
     IsMintPriceSet;
     IsMintContractSet;
     IsTokenAddressesSet;
 
     (* Remote Fetch HOL price *)
-    hol_twap_address_tmp <- hol_twap_address;
-    twap_hol <- & hol_twap_address_tmp.twap;
+    twap_hol <- & hol_twap_address.twap;
     (* price/twap * 10^5 *)
     mint_35_gears_cost_tmp <- mint_35_gears_cost;
     hol_price_tmp = builtin mul mint_35_gears_cost_tmp uint_128_10_power_5;
@@ -681,7 +670,7 @@ transition MintSpecificGears(to: ByStr20, rarity: String, token_type: String, ma
         rarity: rarity;
         token_type: token_type;
         mainstat: mainstat
-    }
+    };
     msgs = one_msg msg;
     send msgs
 end
@@ -698,9 +687,9 @@ transition EvolveHeroes(id_lv_max: Uint256, id_lv_any: Uint256)
         _amount: zero;
         id_lv_max: id_lv_max;
         id_lv_any: id_lv_any
-    }
+    };
     msgs = one_msg msg;
-    send msgs
+    send msgs;
 
     (* Burn 2 NFTs *)
     msg_one = {
@@ -732,7 +721,7 @@ transition EvolveDLHeroes(id_lv_max: Uint256, id_lv_any: Uint256)
         _amount: zero;
         id_lv_max: id_lv_max;
         id_lv_any: id_lv_any
-    }
+    };
     msgs = one_msg msg;
     send msgs;
 
@@ -765,9 +754,9 @@ transition EvoloveGears(id_lv_max: Uint256, id_lv_any: Uint256)
         _amount: zero;
         id_lv_max: id_lv_max;
         id_lv_any: id_lv_any
-    }
+    };
     msgs = one_msg msg;
-    send msgs
+    send msgs;
     
     (* Burn 2 NFTs *)
     msg_one = {
@@ -801,7 +790,7 @@ transition BurnCast(amount: Uint128)
         amount: amount
     };
     msgs = one_msg msg;
-    send msgs;
+    send msgs
 end
 
 transition BurnHol(amount: Uint128)
@@ -818,7 +807,7 @@ transition BurnHol(amount: Uint128)
         amount: amount
     };
     msgs = one_msg msg;
-    send msgs;
+    send msgs
 end
 
 transition BurnHeroes(id: Uint256)
@@ -832,7 +821,7 @@ transition BurnHeroes(id: Uint256)
         token_id: id
     };
     msgs = one_msg msg;
-    send msgs;
+    send msgs
 end
 
 transition BurnDLHeroes(id: Uint256)
@@ -846,7 +835,7 @@ transition BurnDLHeroes(id: Uint256)
         token_id: id
     };
     msgs = one_msg msg;
-    send msgs;
+    send msgs
 end
 
 transition BurnGears(id: Uint256)
@@ -860,7 +849,7 @@ transition BurnGears(id: Uint256)
         token_id: id
     };
     msgs = one_msg msg;
-    send msgs;
+    send msgs
 end
 
 transition AddAdmin(admin: ByStr20)
@@ -886,15 +875,15 @@ transition SetCastAddress(cast_address: ByStr20)
 end
 
 
-transition SetHolTWAPAddress(hol_twap: ByStr20 with contract field twap: Uint128 end)
+(* transition SetHolTWAPAddress(hol_twap: ByStr20 with contract field twap: Uint128 end)
     IsNotOwner _sender;
     hol_twap_address := hol_twap
-end
+end *)
 
-transition SetCastTWAPAddress(cast_twap: ByStr20 with contract field twap: Uint128 end)
+(* transition SetCastTWAPAddress(cast_twap: ByStr20 with contract field twap: Uint128 end)
     IsNotOwner _sender;
     cast_twap_address := cast_twap
-end
+end *)
 
 transition SetMint13HeroesPrice(price: Uint128)
     IsNotOwner _sender;
