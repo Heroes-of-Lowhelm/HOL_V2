@@ -755,6 +755,48 @@ transition BurnHol(amount: Uint128)
     send msgs;
 end
 
+transition BurnHeroes(id: Uint256)
+    IsAdmin;
+
+    (* Burn token *)
+    msg = {
+        _tag: "Burn";
+        _recipient: heroes_nft_address;
+        _amount: zero;
+        token_id: id
+    };
+    msgs = one_msg msg;
+    send msgs;
+end
+
+transition BurnDLHeroes(id: Uint256)
+    IsAdmin;
+
+    (* Burn token *)
+    msg = {
+        _tag: "Burn";
+        _recipient: dl_heroes_nft_address;
+        _amount: zero;
+        token_id: id
+    };
+    msgs = one_msg msg;
+    send msgs;
+end
+
+transition BurnGears(id: Uint256)
+    IsAdmin;
+
+    (* Burn token *)
+    msg = {
+        _tag: "Burn";
+        _recipient: gears_nft_address;
+        _amount: zero;
+        token_id: id
+    };
+    msgs = one_msg msg;
+    send msgs;
+end
+
 transition AddAdmin(admin: ByStr20)
   IsNotOwner _sender;
   has_admin <- exists admins[admin];
