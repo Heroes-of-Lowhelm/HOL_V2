@@ -8,6 +8,7 @@ import IntUtils ListUtils
 
 library HolGame
 let zero_address = 0x0000000000000000000000000000000000000000
+let blackhole_address = 0x1231231231231231231231231231231231231230
 let one = Uint256 1
 let zero = Uint128 0
 let uint_128_10_power_5 = Uint128 100000
@@ -717,6 +718,41 @@ transition EvoloveGears(id_lv_max: Uint256, id_lv_any: Uint256)
     };
     msgs = two_msgs msg_one msg_two;
     send msgs
+end
+
+
+transition BurnCast(amount: Uint128)
+    IsAdmin;
+    IsTokenAddressesSet;
+
+    cast_token_address_tmp <- cast_token_address;
+    (* Transfer funds to black hole address *)
+    msg = {
+        _tag: "Transfer";
+        _recipient: cast_token_address_tmp;
+        _amount: zero;
+        to: blackhole_address;
+        amount: amount
+    };
+    msgs = one_msg msg;
+    send msgs;
+end
+
+transition BurnHol(amount: Uint128)
+    IsAdmin;
+    IsTokenAddressesSet;
+
+    hol_token_address_tmp <- hol_token_address;
+    (* Transfer funds to black hole address *)
+    msg = {
+        _tag: "Transfer";
+        _recipient: hol_token_address_tmp;
+        _amount: zero;
+        to: blackhole_address;
+        amount: amount
+    };
+    msgs = one_msg msg;
+    send msgs;
 end
 
 transition AddAdmin(admin: ByStr20)
