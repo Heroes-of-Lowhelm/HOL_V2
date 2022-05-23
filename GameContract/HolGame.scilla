@@ -620,6 +620,72 @@ transition FreeMint35Gears(to: ByStr20)
     send msgs
 end
 
+
+
+transition MintSpecificHeroes(to: ByStr20, rarity: String, token_type: String)
+    IsAdmin;
+    IsTWAPHolSet;
+    IsMintPriceSet;
+    IsMintContractSet;
+    IsTokenAddressesSet;
+
+    (* Remote Fetch HOL price *)
+    hol_twap_address_tmp <- hol_twap_address;
+    twap_hol <- & hol_twap_address_tmp.twap;
+    (* price/twap * 10^5 *)
+    mint_35_heroes_cost_tmp <- mint_35_heroes_cost;
+    hol_price_tmp = builtin mul mint_35_heroes_cost_tmp uint_128_10_power_5;
+    mint_hol_price = builtin div hol_price_tmp twap_hol;
+
+    hol_token_address_tmp <- hol_token_address;
+    HandleFunds to hol_token_address_tmp mint_hol_price;
+
+    mint_contract_address_tmp <- mint_contract_address;
+    (* Call Mint Transition *)
+    msg = {
+        _tag: "MintSpecificHero";
+        _recipient: mint_contract_address_tmp;
+        _amount: zero;
+        rarity: rarity;
+        token_type: token_type
+    }
+    msgs = one_msg msg;
+    send msgs
+end
+
+
+transition MintSpecificGears(to: ByStr20, rarity: String, token_type: String, mainstat: String)
+    IsAdmin;
+    IsTWAPHolSet;
+    IsMintPriceSet;
+    IsMintContractSet;
+    IsTokenAddressesSet;
+
+    (* Remote Fetch HOL price *)
+    hol_twap_address_tmp <- hol_twap_address;
+    twap_hol <- & hol_twap_address_tmp.twap;
+    (* price/twap * 10^5 *)
+    mint_35_gears_cost_tmp <- mint_35_gears_cost;
+    hol_price_tmp = builtin mul mint_35_gears_cost_tmp uint_128_10_power_5;
+    mint_hol_price = builtin div hol_price_tmp twap_hol;
+
+    hol_token_address_tmp <- hol_token_address;
+    HandleFunds to hol_token_address_tmp mint_hol_price;
+
+    mint_contract_address_tmp <- mint_contract_address;
+    (* Call Mint Transition *)
+    msg = {
+        _tag: "MintSpecificGear";
+        _recipient: mint_contract_address_tmp;
+        _amount: zero;
+        rarity: rarity;
+        token_type: token_type;
+        mainstat: mainstat
+    }
+    msgs = one_msg msg;
+    send msgs
+end
+
 transition EvolveHeroes(id_lv_max: Uint256, id_lv_any: Uint256)
     IsAdmin;
     IsEvolutionAddressesSet;

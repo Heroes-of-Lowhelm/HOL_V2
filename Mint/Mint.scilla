@@ -279,3 +279,43 @@ transition BatchMint35Gears()
     event e
 end
 
+transition MintSpecificHero(rarity: String, token_type: String)
+    blk <- & BLOCKNUMBER;
+    IsSameBlock blk;
+
+    (* generate ID *)
+    current_heroes_id_count <- heroes_id_count;
+    new_heroes_id_count = builtin add current_heroes_id_count one;
+    heroes_id_count := new_heroes_id_count;
+    token_id = new_heroes_id_count;
+
+    e = {
+        _eventname : "MintSpecificHeroes";
+        token_id: token_id;
+        to: _sender;
+        rarity: rarity;
+        token_type: token_type
+    };
+    event e
+end
+
+transition MintSpecificGear(rarity: String, token_type: String, mainstat: String)
+    blk <- & BLOCKNUMBER;
+    IsSameBlock blk;
+
+    (* generate ID *)
+    current_gears_id_count <- gears_id_count;
+    new_gears_id_count = builtin add current_gears_id_count one;
+    gears_id_count := new_gears_id_count;
+    token_id = new_gears_id_count;
+
+    e = {
+        _eventname : "MintSpecificGear";
+        token_id: token_id;
+        to: _sender;
+        rarity: rarity;
+        token_type: token_type;
+        mainstat: mainstat
+    };
+    event e
+end

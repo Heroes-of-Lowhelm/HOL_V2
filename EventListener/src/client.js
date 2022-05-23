@@ -122,6 +122,25 @@ async function ListenForEvents() {
                     await gearsBatchMint(token_id, true, to);
                 }
 
+
+                if (eventObj["_eventname"] === "MintSpecificHeroes") {
+                    let token_id = eventObj["params"][0]["value"];
+                    let to = eventObj["params"][1]["value"];
+                    let rarity = eventObj["params"][2]["value"];
+                    let type = eventObj["params"][3]["value"];
+                    await heroesSpecificMint(token_id, to, rarity, type);
+                }
+
+                if (eventObj["_eventname"] === "MintSpecificGear") {
+                    let token_id = eventObj["params"][0]["value"];
+                    let to = eventObj["params"][1]["value"];
+                    let rarity = eventObj["params"][2]["value"];
+                    let type = eventObj["params"][3]["value"];
+                    let mainstat = eventObj["params"][4]["value"];
+                    await gearsSpecificMint(token_id, to, rarity, type, mainstat);
+                }
+
+
                 // Evolution Event Listener
                 if (eventObj["_eventname"] === "EvolveHeroes") {
                     let max_token_uri = eventObj["params"][0]["value"]["arguments"][0];
@@ -487,6 +506,65 @@ async function heroesSingleMint(token_id, is_high_level, to) {
         });
 }
 
+async function heroesSpecificMint(token_id, to, _rarity, type) {
+    let name = type;
+    let rarity = parseInt(_rarity)
+    let data = JSON.stringify({
+        "pinataMetadata": {
+            "name": `heroes-${token_id}.metadata.json`
+        },
+        "pinataContent": {
+            "description": `Heroes NFT #${token_id}`,
+            "name": `${name}`,
+            "image": `ipfs://${process.env.HEROES_ASSET_CID}/${name}.png`,
+            "rarity": rarity
+        }
+    });
+
+    let config = getConfig(data)
+
+    axios(config)
+        .then(async function (response) {
+            console.log(JSON.stringify(response.data));
+            let IpfsHash = response.data["IpfsHash"];
+            let tokenUri = IpfsHash;
+            // call mint function with tokenURI
+            const heroesNFTContract = zilliqa.contracts.at(process.env.HEROES_NFT_ADDRESS);
+            const callTx = await heroesNFTContract.callWithoutConfirm(
+                'Mint',
+                [
+                    {
+                        vname: 'to',
+                        type: 'ByStr20',
+                        value: to,
+                    },
+                    {
+                        vname: 'token_uri',
+                        type: 'String',
+                        value: tokenUri,
+                    }
+                ],
+                {
+                    // amount, gasPrice and gasLimit must be explicitly provided
+                    version: VERSION,
+                    amount: new BN(0),
+                    gasPrice: myGasPrice,
+                    gasLimit: Long.fromNumber(8000),
+                },
+                false,
+            );
+            console.log("setting Random Number step 2===========>", callTx.id);
+            const confirmedTxn = await callTx.confirm(callTx.id);
+            console.log("setting Random Number step 3===========>", confirmedTxn.receipt);
+            if (confirmedTxn.receipt.success === true) {
+                console.log("==============Transaction is successful===============")
+            }
+        })
+        .catch(function (error) {
+            console.log(error);
+        });
+}
+
 async function gearsSingleMint(token_id, is_high_level, to) {
     let random = await getSingleRandom();
     let [name, rarity, main_stat, substats] = await generateGearsTrait(random, is_high_level);
@@ -502,6 +580,70 @@ async function gearsSingleMint(token_id, is_high_level, to) {
         }
         formattedSubstats.push(formattedParam);
     }
+    let data = JSON.stringify({
+        "pinataMetadata": {
+            "name": `gears-${token_id}.metadata.json`
+        },
+        "pinataContent": {
+            "description": `Gears NFT #${token_id}`,
+            "name": `${name}`,
+            "image": `ipfs://${process.env.GEARS_ASSET_CID}/${name}.png`,
+            "rarity": rarity,
+            "main_stat": `${main_stat}`,
+            "sub_stats": formattedSubstats
+        }
+    });
+
+    let config = getConfig(data)
+
+    axios(config)
+        .then(async function (response) {
+            console.log(JSON.stringify(response.data));
+            let IpfsHash = response.data["IpfsHash"];
+            let tokenUri = IpfsHash;
+            // call mint function with tokenURI
+            const gearsNFTContract = zilliqa.contracts.at(process.env.GEARS_NFT_ADDRESS);
+            const callTx = await gearsNFTContract.callWithoutConfirm(
+                'Mint',
+                [
+                    {
+                        vname: 'to',
+                        type: 'ByStr20',
+                        value: to,
+                    },
+                    {
+                        vname: 'token_uri',
+                        type: 'String',
+                        value: tokenUri,
+                    }
+                ],
+                {
+                    // amount, gasPrice and gasLimit must be explicitly provided
+                    version: VERSION,
+                    amount: new BN(0),
+                    gasPrice: myGasPrice,
+                    gasLimit: Long.fromNumber(8000),
+                },
+                false,
+            );
+            console.log("setting Random Number step 2===========>", callTx.id);
+            const confirmedTxn = await callTx.confirm(callTx.id);
+            console.log("setting Random Number step 3===========>", confirmedTxn.receipt);
+            if (confirmedTxn.receipt.success === true) {
+                console.log("==============Transaction is successful===============")
+            }
+        })
+        .catch(function (error) {
+            console.log(error);
+        });
+}
+
+async function gearsSpecificMint(token_id, to, _rarity, type, mainstat) {
+    let name = type;
+    let rarity = parseInt(_rarity);
+    let main_stat = mainstat;
+    let formattedSubstats = [];
+   
     let data = JSON.stringify({
         "pinataMetadata": {
             "name": `gears-${token_id}.metadata.json`
