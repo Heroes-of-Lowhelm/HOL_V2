@@ -336,7 +336,6 @@ end
 (* - TWAP of Hol address must be set. *)
 transition Mint13Heroes(to: ByStr20)
     IsAdmin;
-    (* IsTWAPCastSet; *)
     IsMintPriceSet;
     IsMintContractSet;
     IsTokenAddressesSet;
@@ -393,7 +392,6 @@ end
 
 transition Mint13Gears(to: ByStr20)
     IsAdmin;
-    (* IsTWAPCastSet; *)
     IsMintPriceSet;
     IsMintContractSet;
     IsTokenAddressesSet;
@@ -450,7 +448,6 @@ end
 
 transition BatcMint13Heroes(to: ByStr20)
     IsAdmin;
-    (* IsTWAPCastSet; *)
     IsMintPriceSet;
     IsMintContractSet;
     IsTokenAddressesSet;
@@ -507,7 +504,6 @@ end
 
 transition BatchMint13Gears(to: ByStr20)
     IsAdmin;
-    (* IsTWAPCastSet; *)
     IsMintPriceSet;
     IsMintContractSet;
     IsTokenAddressesSet;
