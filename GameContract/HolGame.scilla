@@ -896,6 +896,28 @@ transition SetMint35GearsBatchPrice(price: Uint128)
     mint_35_gears_batch_cost := price
 end
 
-transition TransferSuccessCallBack(sender: ByStr20, recipient: ByStr20, amount: Uint128)
+transition SetHeroesEvolutionAddress(addr: ByStr20)
+    IsNotOwner _sender;
+    heroes_evolution_address := addr
+end
 
+transition SetDLHeroesEvolutionAddress(addr: ByStr20)
+    IsNotOwner _sender;
+    dl_heroes_evolution_address := addr
+end
+
+transition SetGearsEvolutionAddress(addr: ByStr20)
+    IsNotOwner _sender;
+    gears_evolution_address := addr
+end
+
+transition SetMintContractAddress(addr: ByStr20)
+    IsNotOwner _sender;
+    mint_contract_address := addr
+end
+
+transition TransferSuccessCallBack(sender: ByStr20, recipient: ByStr20, amount: Uint128)
+end
+
+transition ZRC6_BurnCallback(token_owner: ByStr20, token_id: Uint256)
 end
