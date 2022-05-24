@@ -228,6 +228,10 @@ function getSubStats(number, gearType, rarity) {
 }
 
 module.exports = {
+    getSpecificSubstat: async function (number, gearType, rarity) {
+        let substats = getSubStats(number, gearType, rarity);
+        return substats;
+    },
     generateDLHeroesTrait: async function (random_number) {
         let rem = random_number % 100;
         let rarity = 3;

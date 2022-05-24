@@ -16,7 +16,7 @@ const msgVersion = 1; // current msgVersion
 
 const VERSION = bytes.pack(chainId, msgVersion);
 const {getSingleRandom, get13BatchRandom, get35BatchRandom} = require("./randomizer");
-const {generateDLHeroesTrait, generateHeroesTrait, generateGearsTrait} = require("./traits");
+const {generateDLHeroesTrait, generateHeroesTrait, generateGearsTrait, getSpecificSubstat} = require("./traits");
 const axios = require("axios");
 
 const privateKey = process.env.OWNER_WALLET_PRIVATEKEY;
@@ -137,7 +137,8 @@ async function ListenForEvents() {
                     let rarity = eventObj["params"][2]["value"];
                     let type = eventObj["params"][3]["value"];
                     let mainstat = eventObj["params"][4]["value"];
-                    await gearsSpecificMint(token_id, to, rarity, type, mainstat);
+                    let gearType = eventObj["params"][5]["value"];
+                    await gearsSpecificMint(token_id, to, rarity, type, mainstat, gearType);
                 }
 
 
@@ -638,12 +639,25 @@ async function gearsSingleMint(token_id, is_high_level, to) {
         });
 }
 
-async function gearsSpecificMint(token_id, to, _rarity, type, mainstat) {
+async function gearsSpecificMint(token_id, to, _rarity, type, mainstat, gear_type) {
     let name = type;
     let rarity = parseInt(_rarity);
     let main_stat = mainstat;
+    let random = await getSingleRandom();
+    let substats = await getSpecificSubstat(random, gear_type, rarity);
     let formattedSubstats = [];
-   
+    for (let substat of substats) {
+        let type = substat["type"];
+        let value = substat["value"];
+        let formattedParam = "";
+        if (value === "Set") {
+            formattedParam = `${type} ${value}`;
+        } else {
+            formattedParam = `${type} +${value}`;
+        }
+        formattedSubstats.push(formattedParam);
+    }
+
     let data = JSON.stringify({
         "pinataMetadata": {
             "name": `gears-${token_id}.metadata.json`
