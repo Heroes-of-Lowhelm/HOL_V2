@@ -30,16 +30,18 @@ let two_msgs =
 
 
 type Error =
-| CodeIsOwner
-| NotAdminError
-| AdminFoundError
-| RequestAmountExceedErr
-| TWAPHolAddressNotSetErr
-| MintPriceNotSetError
-| MintContractAddressNotSetErr
-| TWAPCastAddressNotSetErr
-| TokenAddressNotSetErr
-| EvolutionAddressNotSetErr
+    | CodeIsOwner
+    | NotAdminError
+    | AdminFoundError
+    | RequestAmountExceedErr
+    | TWAPHolAddressNotSetErr
+    | MintPriceNotSetError
+    | MintContractAddressNotSetErr
+    | TWAPCastAddressNotSetErr
+    | TokenAddressNotSetErr
+    | EvolutionAddressNotSetErr
+    | NotPausedError
+    | PausedError
 
 let make_error =
     fun (result : Error) =>
@@ -55,6 +57,8 @@ let make_error =
         | TWAPCastAddressNotSetErr    => Int32 -8
         | TokenAddressNotSetErr       => Int32 -9
         | EvolutionAddressNotSetErr   => Int32 -10
+        | NotPausedError              => Int32 -11
+        | PausedError                 => Int32 -12
         end
         in
         { _exception : "Error"; code : result_code }
@@ -78,6 +82,9 @@ contract HolGame
 field admins: Map ByStr20 Bool = 
   let emp_map = Emp ByStr20 Bool in
   builtin put emp_map contract_owner true
+
+(* Defaults to False *)
+field is_paused: Bool = false
 
 (* $HOL token address *)
 field hol_token_address: ByStr20 = zero_address
@@ -108,6 +115,19 @@ field gears_evolution_address: ByStr20 = zero_address
 (**************************************)
 (*             Procedures             *)
 (**************************************)
+procedure RequireNotPaused()
+  (* Reference: *)
+  (* https://consensys.github.io/smart-contract-best-practices/general_philosophy/#prepare-for-failure *)
+  paused <- is_paused;
+  match paused with
+  | False =>
+  | True =>
+    (* Contract is paused *)
+    error = PausedError;
+    Throw error
+  end
+end
+
 
 procedure ThrowError(error: Error)
     e = make_error error;
@@ -271,6 +291,7 @@ end
 (* @Requirements: *)
 (* - `_sender` must be the contract Admin. *)
 transition DepositFund(to: ByStr20, token_address: ByStr20, amount: Uint128)
+    RequireNotPaused;
     IsAdmin;
     origin_amount <- account_balances[to][token_address];
     match origin_amount with
@@ -291,6 +312,7 @@ end
 (* @Requirements: *)
 (* - `_sender` must be the contract Admin. *)
 transition WithdrawFund(to: ByStr20, token_address: ByStr20, amount: Uint128)
+    RequireNotPaused;
     IsAdmin;
     origin_amount <- account_balances[to][token_address];
     match origin_amount with
@@ -335,6 +357,7 @@ end
 (* - `_sender` must be the contract Admin. *)
 (* - TWAP of Hol address must be set. *)
 transition Mint13Heroes(to: ByStr20)
+    RequireNotPaused;
     IsAdmin;
     IsMintPriceSet;
     IsMintContractSet;
@@ -363,6 +386,7 @@ transition Mint13Heroes(to: ByStr20)
 end
 
 transition Mint35Heroes(to: ByStr20)
+    RequireNotPaused;
     IsAdmin;
     (* IsTWAPHolSet; *)
     IsMintPriceSet;
@@ -391,6 +415,7 @@ transition Mint35Heroes(to: ByStr20)
 end
 
 transition Mint13Gears(to: ByStr20)
+    RequireNotPaused;
     IsAdmin;
     IsMintPriceSet;
     IsMintContractSet;
@@ -419,6 +444,7 @@ transition Mint13Gears(to: ByStr20)
 end
 
 transition Mint35Gears(to: ByStr20)
+    RequireNotPaused;
     IsAdmin;
     (* IsTWAPHolSet; *)
     IsMintPriceSet;
@@ -447,6 +473,7 @@ transition Mint35Gears(to: ByStr20)
 end
 
 transition BatcMint13Heroes(to: ByStr20)
+    RequireNotPaused;
     IsAdmin;
     IsMintPriceSet;
     IsMintContractSet;
@@ -475,6 +502,7 @@ transition BatcMint13Heroes(to: ByStr20)
 end
 
 transition BatchMint35Heroes(to: ByStr20)
+    RequireNotPaused;
     IsAdmin;
     (* IsTWAPHolSet; *)
     IsMintPriceSet;
@@ -503,6 +531,7 @@ transition BatchMint35Heroes(to: ByStr20)
 end
 
 transition BatchMint13Gears(to: ByStr20)
+    RequireNotPaused;
     IsAdmin;
     IsMintPriceSet;
     IsMintContractSet;
@@ -531,6 +560,7 @@ transition BatchMint13Gears(to: ByStr20)
 end
 
 transition BatchMint35Gears(to: ByStr20)
+    RequireNotPaused;
     IsAdmin;
     (* IsTWAPHolSet; *)
     IsMintPriceSet;
@@ -561,6 +591,7 @@ end
 
 (* This transition uses card in Game. *)
 transition MintDLHeroes(to: ByStr20)
+    RequireNotPaused;
     IsAdmin;
     IsMintContractSet;
 
@@ -577,6 +608,7 @@ end
 
 
 transition FreeMint35Heroes(to: ByStr20)
+    RequireNotPaused;
     IsAdmin;
     IsMintContractSet;
 
@@ -593,6 +625,7 @@ end
 
 
 transition FreeMint35Gears(to: ByStr20)
+    RequireNotPaused;
     IsAdmin;
     IsMintContractSet;
 
@@ -610,6 +643,7 @@ end
 
 
 transition MintSpecificHeroes(to: ByStr20, rarity: String, token_type: String)
+    RequireNotPaused;
     IsAdmin;
     IsMintContractSet;
 
@@ -628,6 +662,7 @@ end
 
 
 transition MintSpecificGears(to: ByStr20, rarity: String, token_type: String, mainstat: String)
+    RequireNotPaused;
     IsAdmin;
     IsMintContractSet;
 
@@ -646,6 +681,7 @@ transition MintSpecificGears(to: ByStr20, rarity: String, token_type: String, ma
 end
 
 transition EvolveHeroes(id_lv_max: Uint256, id_lv_any: Uint256)
+    RequireNotPaused;
     IsAdmin;
     IsEvolutionAddressesSet;
 
@@ -680,6 +716,7 @@ transition EvolveHeroes(id_lv_max: Uint256, id_lv_any: Uint256)
 end
 
 transition EvolveDLHeroes(id_lv_max: Uint256, id_lv_any: Uint256)
+    RequireNotPaused;
     IsAdmin;
     IsEvolutionAddressesSet;
 
@@ -713,6 +750,7 @@ transition EvolveDLHeroes(id_lv_max: Uint256, id_lv_any: Uint256)
 end
 
 transition EvoloveGears(id_lv_max: Uint256, id_lv_any: Uint256)
+    RequireNotPaused;
     IsAdmin;
     IsEvolutionAddressesSet;
 
@@ -747,6 +785,7 @@ end
 
 
 transition BurnCast(amount: Uint128)
+    RequireNotPaused;
     IsAdmin;
     IsTokenAddressesSet;
 
@@ -764,6 +803,7 @@ transition BurnCast(amount: Uint128)
 end
 
 transition BurnHol(amount: Uint128)
+    RequireNotPaused;
     IsAdmin;
     IsTokenAddressesSet;
 
@@ -781,6 +821,7 @@ transition BurnHol(amount: Uint128)
 end
 
 transition BurnHeroes(id: Uint256)
+    RequireNotPaused;
     IsAdmin;
 
     (* Burn token *)
@@ -795,6 +836,7 @@ transition BurnHeroes(id: Uint256)
 end
 
 transition BurnDLHeroes(id: Uint256)
+    RequireNotPaused;
     IsAdmin;
 
     (* Burn token *)
@@ -809,6 +851,7 @@ transition BurnDLHeroes(id: Uint256)
 end
 
 transition BurnGears(id: Uint256)
+    RequireNotPaused;
     IsAdmin;
 
     (* Burn token *)
@@ -823,15 +866,15 @@ transition BurnGears(id: Uint256)
 end
 
 transition AddAdmin(admin: ByStr20)
-  IsNotOwner _sender;
-  has_admin <- exists admins[admin];
-  match has_admin with
-  | True =>
-    error = AdminFoundError;
-    ThrowError error
-  | False =>
-    admins[admin] := true
-  end
+    IsNotOwner _sender;
+    has_admin <- exists admins[admin];
+    match has_admin with
+    | True =>
+        error = AdminFoundError;
+        ThrowError error
+    | False =>
+        admins[admin] := true
+    end
 end
 
 transition SetHolAddress(hol_address: ByStr20)
@@ -914,6 +957,36 @@ end
 transition SetMintContractAddress(addr: ByStr20)
     IsNotOwner _sender;
     mint_contract_address := addr
+end
+
+transition Pause()
+    RequireNotPaused;
+    IsNotOwner _sender;
+
+    is_paused := true;
+    e = {
+        _eventname: "Pause";
+        is_paused: true
+    };
+    event e
+end
+
+transition Unpause()
+    paused <- is_paused;
+    match paused with
+    | True =>
+    | False =>
+        error = NotPausedError;
+        Throw error
+    end;
+    IsNotOwner _sender;
+
+    is_paused := false;
+    e = {
+        _eventname: "Unpause";
+        is_paused: false
+    };
+    event e
 end
 
 transition TransferSuccessCallBack(sender: ByStr20, recipient: ByStr20, amount: Uint128)
