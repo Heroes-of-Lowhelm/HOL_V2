@@ -115,6 +115,12 @@ field gears_evolution_address: ByStr20 = zero_address
 (**************************************)
 (*             Procedures             *)
 (**************************************)
+
+procedure ThrowError(error: Error)
+    e = make_error error;
+    throw e
+end
+
 procedure RequireNotPaused()
   (* Reference: *)
   (* https://consensys.github.io/smart-contract-best-practices/general_philosophy/#prepare-for-failure *)
@@ -124,17 +130,9 @@ procedure RequireNotPaused()
   | True =>
     (* Contract is paused *)
     error = PausedError;
-    Throw error
+    ThrowError error
   end
 end
-
-
-procedure ThrowError(error: Error)
-    e = make_error error;
-    throw e
-end
-
-
 
 procedure IsNotOwner(address: ByStr20)
     is_owner = builtin eq contract_owner address;
@@ -977,7 +975,7 @@ transition Unpause()
     | True =>
     | False =>
         error = NotPausedError;
-        Throw error
+        ThrowError error
     end;
     IsNotOwner _sender;
 
