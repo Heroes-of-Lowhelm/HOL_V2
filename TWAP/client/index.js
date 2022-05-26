@@ -11,13 +11,13 @@ const {default: axios} = require("axios");
 
 
 
-// const zilliqa = new Zilliqa('https://dev-api.zilliqa.com');
-const zilliqa = new Zilliqa('https://api.zilliqa.com');
+const zilliqa = new Zilliqa('https://dev-api.zilliqa.com');
+// const zilliqa = new Zilliqa('https://api.zilliqa.com');
 
 
 
-// const chainId = 333; // chainId of the developer testnet
-const chainId = 1; // chainId of the mainnet
+const chainId = 333; // chainId of the developer testnet
+// const chainId = 1; // chainId of the mainnet
 
 
 
